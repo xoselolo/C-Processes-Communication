@@ -5,6 +5,8 @@
 #include "lionel_trama.h"
 
 extern pthread_mutex_t mutexLlistaMcGruders;
+extern pthread_mutex_t mutexLlistaImatges;
+extern pthread_mutex_t mutexLlistaTxts;
 
 void mostraTrama(Trama connectionTrama){
     printf("TRAMA\n");
@@ -16,7 +18,7 @@ void mostraTrama(Trama connectionTrama){
 
 int sendTrama(Trama trama, int fd){
     //write(fdLionel, &trama, sizeof(trama));
-    mostraTrama(trama);
+    //mostraTrama(trama);
 
     int disconnected = write(fd, &trama.type, 1);
     if (disconnected < 0){
@@ -85,7 +87,7 @@ Trama receiveTrama(int fd){
 
             }
 
-            mostraTrama(receivedTrama);
+            //mostraTrama(receivedTrama);
             return receivedTrama;
         }
 
@@ -196,7 +198,9 @@ int tractaTrama(Trama received, int fd){
                                 }
                                 write(fdImatge, fileContent, image.size * sizeof(char));
                                 close(fdImatge);
-                                // todo: comptabilitzar-la
+
+                                addNewImage(image);
+
                                 return 5;
                             }else{
                                 mostraErrorRebreArxiu(image.name);
@@ -332,4 +336,26 @@ Image getImageInfo(Trama received){
     }
 
     return image;
+}
+
+void addNewImage(Image newImage){
+
+    // Esperem al semafor i el bloquejem
+    pthread_mutex_lock(&mutexLlistaImatges);
+
+    int index = imagesList.numImages;
+    imagesList.numImages++;
+    imagesList.images = realloc(imagesList.images, imagesList.numImages * sizeof(Image));
+
+    // Copiem els valors de la nova imatge
+    imagesList.images[index].name = (char*)malloc(sizeof(char) * strlen(newImage.name));
+    imagesList.images[index].name = strcpy(imagesList.images[index].name, newImage.name);
+    imagesList.images[index].size = newImage.size;
+    imagesList.images[index].data = newImage.data;
+    imagesList.images[index].hora = newImage.hora;
+
+    // Desbloquejem el semafor
+    pthread_mutex_unlock(&mutexLlistaImatges);
+
+    printf("Nova imatge desada!\n");
 }

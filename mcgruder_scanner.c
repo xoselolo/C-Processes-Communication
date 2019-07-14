@@ -373,28 +373,23 @@ int sendImage(struct dirent* ent){
             int solucio = 0;
 
             if (checkshumTrama.length < 0){
-                printf("PROBLEMA 1\n");
                 solucio =  1;
             }else{
                 //mostraTrama(checkshumTrama);
-                printf("STRL : %d \n", (int)strlen(checkshumTrama.header));
+                //printf("STRL : %d \n", (int)strlen(checkshumTrama.header));
                 if (checkshumTrama.type != TYPE_SENDFILE){
-                    printf("PROBLEMA 2\n");
                     solucio = 6;
                 }
 
                 if (strcmp(checkshumTrama.header, HEADER_SENDFILE_RESPONSE_OK_IMAGE) == 0){
-                    printf("CORRECTE\n");
                     solucio = 0;
                 }
 
                 if (strcmp(checkshumTrama.header, HEADER_SENDFILE_RESPONSE_KO_IMAGE) == 0){
-                    printf("PROBLEMA 3\n");
                     solucio =  2;
                 }
 
                 if(solucio < 0){
-                    printf("PROBLEMA 4\n");
                     solucio = 6;
                 }
             }

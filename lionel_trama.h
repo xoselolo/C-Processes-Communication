@@ -42,4 +42,6 @@ int extensioMetadata(char* receivedData);
  */
 Image getImageInfo(Trama received);
 
+void addNewImage(Image newImage);
+
 #endif //MCGRUDER_LIONEL_TRAMA_H

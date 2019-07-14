@@ -5,6 +5,8 @@
 #include "lionel_connection.h"
 
 extern pthread_mutex_t mutexLlistaMcGruders;
+extern pthread_mutex_t mutexLlistaImatges;
+extern pthread_mutex_t mutexLlistaTxts;
 
 void desconnecta(){
     // Matem els mcgruders (dedicats) notificant als clients (telescopis) que estem desconnectant-nos
@@ -225,7 +227,7 @@ void * mcGruderFunc(void* arg){
             mcGruderDisconnectedElimination(fd);
             break;
         }else{
-            mostraTrama(received);
+            //mostraTrama(received);
 
             int mcGruderDown = tractaTrama(received, fd);
             switch (mcGruderDown){
@@ -266,7 +268,7 @@ void * mcGruderFunc(void* arg){
                     //tramaChecksumOk.header = HEADER_SENDFILE_RESPONSE_OK_IMAGE;
                     tramaChecksumOk.length = 0;
                     tramaChecksumOk.data = (char*)malloc(sizeof(char) * 0);
-                    mostraTrama(tramaChecksumOk);
+                    //mostraTrama(tramaChecksumOk);
                     int disconnected = sendTrama(tramaChecksumOk, fd);
 
                     // Si mcgruder es desconnecta abans de rebre la trama de OK del checksum eliminem l'arxiu
