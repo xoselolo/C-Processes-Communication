@@ -13,7 +13,7 @@ void mostraTrama(Trama connectionTrama){
 }
 
 int sendTrama(Trama trama){
-    //mostraTrama(trama);
+    mostraTrama(trama);
     int desconnexio = write(fdLionel, &trama.type, 1);
     if (desconnexio < 0){
         return 1;
@@ -105,6 +105,8 @@ int enviaTramaDesconnexio(){
 
 Trama receiveTrama(){
     Trama receivedTrama;
+    receivedTrama.header = NULL;
+    receivedTrama.data = NULL;
     memset(&receivedTrama, 0, sizeof(receivedTrama));
 
     int disconnected = read(fdLionel, &receivedTrama.type, sizeof(char));
@@ -148,7 +150,7 @@ Trama receiveTrama(){
 
             }
 
-            //mostraTrama(receivedTrama);
+            mostraTrama(receivedTrama);
             return receivedTrama;
         }
 

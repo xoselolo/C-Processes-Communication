@@ -9,6 +9,7 @@
 #include <dirent.h>
 //#include <sys/stat.h>
 #include "mcgruder_connection.h"
+#include "checksum.h"
 
 // Constants
 #define DIR_PATH "files/"

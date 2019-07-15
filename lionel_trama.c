@@ -18,7 +18,7 @@ void mostraTrama(Trama connectionTrama){
 
 int sendTrama(Trama trama, int fd){
     //write(fdLionel, &trama, sizeof(trama));
-    //mostraTrama(trama);
+    mostraTrama(trama);
 
     int disconnected = write(fd, &trama.type, 1);
     if (disconnected < 0){
@@ -44,6 +44,8 @@ int sendTrama(Trama trama, int fd){
 
 Trama receiveTrama(int fd){
     Trama receivedTrama;
+    receivedTrama.data = NULL;
+    receivedTrama.header = NULL;
     memset(&receivedTrama, 0, sizeof(receivedTrama));
 
     int disconnected = read(fd, &receivedTrama.type, sizeof(char));
@@ -87,7 +89,7 @@ Trama receiveTrama(int fd){
 
             }
 
-            //mostraTrama(receivedTrama);
+            mostraTrama(receivedTrama);
             return receivedTrama;
         }
 
@@ -120,11 +122,20 @@ int tractaTrama(Trama received, int fd){
                 int tipus = extensioMetadata(received.data);
                 Image image;
                 Txt txt;
+                char* mcgrduerName;
                 if (tipus != 0){
                     switch (tipus){
                         case 1:
                             // Imatge JPG
                             image = getImageInfo(received);
+
+                            // Mostrem missatge rebent informacio del mcgruder
+                            mcgrduerName = getMcGruderName(fd);
+                            if (mcgrduerName == NULL){
+                                mostraErrorRebreArxiu(image.name);
+                                return 7;
+                            }
+                            mostraMissatgeReceivingData(mcgrduerName);
 
                             char* fileContent = (char*)malloc(image.size * sizeof(char));
                             while (1){
@@ -175,35 +186,63 @@ int tractaTrama(Trama received, int fd){
                                 return 1;
                             }
 
-                            // todo: pipes, fork, comprovar capceleres de la trama a veure si son les de endfile
+                            // Hem rebut be la imatge, muntem la imatge
+                            char* path = (char*)malloc(0 * sizeof(char));
+                            path = strcpy(path, "files/");
+                            path = strcat(path, image.name);
+
+                            int fdImatge = creat(path, 0777);
+                            if (fdImatge < 0){
+                                printf("Error al intentar crear arxiu!\n");
+                                free(fileContent);
+                                return 6;
+                            }
+                            write(fdImatge, fileContent, image.size * sizeof(char));
+                            close(fdImatge);
 
                             // comprovem el checksum
-                            char* myChecksum = (char*)malloc(strlen(HEADER_SENDFILE_RESPONSE_OK_IMAGE) * sizeof(char));
-                            // Checksum provisional
-                            myChecksum = strcpy(myChecksum, HEADER_SENDFILE_RESPONSE_OK_IMAGE);
+                            char* myChecksum = makeChecksum(path);
 
                             // Comparem el checksum calculat (provisional) amb el rebut
                             if (strcmp(myChecksum, received.data) == 0){
-                                // Hem rebut be la imatge, muntem la imatge
-                                char* path = (char*)malloc(0 * sizeof(char));
-                                path = strcpy(path, "files/");
-                                path = strcat(path, image.name);
-                                //int fdImatge = open(path, O_WRONLY | O_CREAT);
-                                //int fdImatge = open(path, O_WRONLY | O_CREAT);
-                                int fdImatge = creat(path, 0777);
-                                if (fdImatge < 0){
-                                    printf("Error al intentar crear arxiu!\n");
-                                    free(fileContent);
-                                    return 6;
+                                // Ambdos checksum coincideixen
+                                printf("Hem rebut be l'arxiu! \n");
+
+                                Trama tramaChecksumOk;
+                                tramaChecksumOk.type = TYPE_SENDFILE;
+                                int length = strlen(HEADER_SENDFILE_RESPONSE_OK_IMAGE);
+                                tramaChecksumOk.header = (char*)malloc(length * sizeof(char));
+                                tramaChecksumOk.header = strcpy(tramaChecksumOk.header, HEADER_SENDFILE_RESPONSE_OK_IMAGE);
+
+                                tramaChecksumOk.length = 0;
+                                tramaChecksumOk.data = (char*)malloc(sizeof(char) * 0);
+                                //mostraTrama(tramaChecksumOk);
+                                int disconnected = sendTrama(tramaChecksumOk, fd);
+
+                                // Si mcgruder es desconnecta abans de rebre la trama de OK del checksum eliminem l'arxiu
+                                if (disconnected){
+                                    remove(path); // El borrem perque mcgruder no el borrara i ens el tornara a enviar quan es torni a connectar
+                                    return 1; // Mc gruder desconnectat
                                 }
-                                write(fdImatge, fileContent, image.size * sizeof(char));
-                                close(fdImatge);
 
                                 addNewImage(image);
+                                mostraMissatgeFileReceived(image.name);
 
                                 return 5;
                             }else{
+                                // Checksum error
                                 mostraErrorRebreArxiu(image.name);
+
+                                Trama tramaChecksumOk;
+                                tramaChecksumOk.type = TYPE_SENDFILE;
+                                int length = strlen(HEADER_SENDFILE_RESPONSE_KO_IMAGE);
+                                tramaChecksumOk.header = (char*)malloc(length * sizeof(char));
+                                tramaChecksumOk.header = strcpy(tramaChecksumOk.header, HEADER_SENDFILE_RESPONSE_KO_IMAGE);
+
+                                tramaChecksumOk.length = 0;
+                                tramaChecksumOk.data = (char*)malloc(sizeof(char) * 0);
+                                //mostraTrama(tramaChecksumOk);
+                                int disconnected = sendTrama(tramaChecksumOk, fd);
                                 return 6;
                             }
 
@@ -354,8 +393,41 @@ void addNewImage(Image newImage){
     imagesList.images[index].data = newImage.data;
     imagesList.images[index].hora = newImage.hora;
 
+    printf("Nova imatge desada!\n");
+    int numImatges = imagesList.numImages;
+    printf("Tenim %d imatges guardades \n", numImatges);
+    for (int i = 0; i < numImatges; i++) {
+        printf("Imatge: %s \n", imagesList.images[i].name);
+    }
+
     // Desbloquejem el semafor
     pthread_mutex_unlock(&mutexLlistaImatges);
 
-    printf("Nova imatge desada!\n");
+}
+
+char* getMcGruderName(int fd){
+    // Esperem al semafor dels mcgruders
+    pthread_mutex_lock(&mutexLlistaMcGruders);
+    int index = -1;
+
+    for(int i = 0; i < mcGrudersList.numMcGrudersConnected; i++){
+        if (mcGrudersList.mcgruders[i].fdMcgruder == fd){
+            index = i;
+            break;
+        }
+    }
+
+    char* mcgruderName;
+
+    if (index == -1){
+        mcgruderName = NULL;
+    }else{
+        mcgruderName = (char*)malloc(sizeof(char) * strlen(mcGrudersList.mcgruders[index].telescopeName));
+        mcgruderName = strcpy(mcgruderName, mcGrudersList.mcgruders[index].telescopeName);
+    }
+
+    // Desbloquejem el semafor
+    pthread_mutex_unlock(&mutexLlistaMcGruders);
+
+    return mcgruderName;
 }

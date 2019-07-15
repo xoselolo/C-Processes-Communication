@@ -50,7 +50,8 @@ void desconnecta(){
         }else{
             if (strcmp(disconnectionTrama.header, HEADER_DISCONNECTION_RESPONSE_KO) == 0){
                 // Lionel ens ha dit que no li sembla be que ens desconnectem, que fem?
-                // todo: QUE CONY FEM QUAN LIONEL ENS DIU QUE NO ENS PODEM DESCONNECTAR?¿?¿
+                // QUE CONY FEM QUAN LIONEL ENS DIU QUE NO ENS PODEM DESCONNECTAR?¿?¿
+                desconnectaForsaBruta();
             }
         }
     }
@@ -58,7 +59,6 @@ void desconnecta(){
 }
 
 void desconnectaForsaBruta(){
-    printf("MARXEM!\n");
     // tanquem el FD amb Lionel
     close(fdLionel);
     mostraMissatgeDisconnecting();

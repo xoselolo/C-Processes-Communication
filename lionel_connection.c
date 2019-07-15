@@ -254,34 +254,13 @@ void * mcGruderFunc(void* arg){
                     printf("Extensio de l'arxiu desconeguda\n");
                     break;
                 case 5:
-                    printf("Hem rebut be l'arxiu! \n");
-
-                    // todo : Calcular checksum
-
-                    Trama tramaChecksumOk;
-                    tramaChecksumOk.type = TYPE_SENDFILE;
-                    int length = strlen(HEADER_SENDFILE_RESPONSE_OK_IMAGE);
-                    printf("EL length que falla es %d \n", length);
-                    tramaChecksumOk.header = (char*)malloc(length * sizeof(char));
-                    tramaChecksumOk.header = strcpy(tramaChecksumOk.header, HEADER_SENDFILE_RESPONSE_OK_IMAGE);
-
-                    //tramaChecksumOk.header = HEADER_SENDFILE_RESPONSE_OK_IMAGE;
-                    tramaChecksumOk.length = 0;
-                    tramaChecksumOk.data = (char*)malloc(sizeof(char) * 0);
-                    //mostraTrama(tramaChecksumOk);
-                    int disconnected = sendTrama(tramaChecksumOk, fd);
-
-                    // Si mcgruder es desconnecta abans de rebre la trama de OK del checksum eliminem l'arxiu
-                    if (disconnected){
-                        // todo: delete file
-                        mcGruderDisconnectedElimination(fd);
-                        return NULL;
-                    }
-
-
-
+                    // Hem rebut l'arxiu perfectament
                     break;
                 case 6:
+                    printf("Error al crear l'arxiu!\n");
+                    break;
+                case 7:
+                    printf("Error, no hem trobat de qui rebem l'arxiu!\n");
                     break;
                 default:
                     printf("Everything running OK!\n");

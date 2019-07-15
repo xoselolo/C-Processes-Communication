@@ -40,24 +40,7 @@ void parseDirectory(){
 
         struct dirent* ent = readdir(directory);
         if (ent == NULL){
-            printf("No hi ha arxius!\n");
-            // llegim una trama per saber si el fd segueix obert o no, si no ho esta vol dir que Lionel ha caigut, i ens desconnectem
-            // Si hi ha arxius, ens adonarem quan estiguem enviant trames del primer arxiu, ja que
-            // al enviar la metadata el write valdra < 0
-            /*char type;
-            int disconnected = read(fdLionel, &type, sizeof(char));
-            if (disconnected < 0){
-                desconnectaForsaBruta();
-            }else{
-                // todo: CAL REVISAR ( --> MALE <-- )
-                if (disconnected == 0){
-                    // NO hem rebut res
-                    printf("Lionel segueix running!\n");
-                }else{
-                    // Hem rebut una trama, i ha de ser la de desconnexio perque no hem enviat res!
-                    printf("Crec que hem rebut una trama de desconnexio\n");
-                }
-            }*/
+            printf("No hi ha arxius!\n"); // todo: canviar per un WRITE
         }
         while (ent != NULL){
             // Enviem l'arxiu
@@ -65,6 +48,10 @@ void parseDirectory(){
                 int errorSendFile = sendFile(ent);
 
                 if (errorSendFile > 0){
+                    if (errorSendFile == 2){
+                        // Extensio erronia
+                        printf("Error en extensio!\n");
+                    }
                     // Error al enviar l'arxiu (Lionel ha caigut (1) o be el checksum es incorrecte(2))
                     mostraErrorEnviarFitxer(ent->d_name);
 
@@ -115,8 +102,6 @@ int sendFile(struct dirent* ent) {
     int errorType = checkType(ent);
     switch (errorType){
         case FILE_TYPE_IMAGE:
-            // Arxiu enviat perfectament!
-
             mostraMissatgeSendingFile(ent->d_name);
 
             imageError = sendImage(ent);
@@ -135,23 +120,20 @@ int sendFile(struct dirent* ent) {
 
 
         case FILE_TYPE_TXT:
-            // Arxiu enviat perfectament!
-            mostraMissatgeFileName(ent->d_name);
             mostraMissatgeSendingFile(ent->d_name);
 
-            // todo : send TXT file
-            txtError = sendTxt(ent); // todo
+            txtError = sendTxt(ent);
 
             if (txtError == 0){
                 // Imatge enviada satisfacrtoriament
                 mostraMissatgeFileSent();
                 // Eliminem l'arxiu
                 deleteFile(ent->d_name);
+                return 0;
             }else{
                 // si no ha arribat la imatge no la borrem
                 return txtError;
             }
-            return 0;
             break;
 
 
@@ -193,10 +175,13 @@ int checkType (struct dirent* ent){
         // veiem quina extensio te
         char* extension = getExtensionArxiu(ent);
         if (strcmp(extension, FILE_EXTENSION_IMAGE) == 0){
+            free(extension);
             return FILE_TYPE_IMAGE;
         }else if (strcmp(extension, FILE_EXTENSION_TXT) == 0){
+            free(extension);
             return FILE_TYPE_TXT;
         }
+        free(extension);
         return FILE_TYPE_NOTVALID;
     }
 }
@@ -204,9 +189,15 @@ int checkType (struct dirent* ent){
 char* getExtensionArxiu(struct dirent* ent){
     char* extension = (char*)malloc(sizeof(char) * 4);
     int initial = strlen(ent->d_name) - 4;
-    for (int i = 0; i < 4; i++) {
+    /*for (int i = 0; i < 4; i++) {
         extension[i] = ent->d_name[initial + i];
     }
+    printf("Full name: %s \n", ent->d_name);
+    printf("Extension: %s \n", extension);*/
+
+    //return extension;
+    extension = strncpy(extension, ent->d_name + initial, 4);
+    printf("Extension: %s \n", extension);
     return extension;
 }
 
@@ -278,6 +269,7 @@ int sendImage(struct dirent* ent){
 
     int size = getSizeArxiu(pathArxiu);
     if (size < 0){
+        printf("Error en size \n");
         return 3;
     }
     Data dataActual = getDataActual();
@@ -303,12 +295,14 @@ int sendImage(struct dirent* ent){
     free(imageTrama.data);
 
     if (disconnection){
+        printf("Error de connexio\n");
         return 1; // Error de connexio
     }
 
     int fdArxiu = open(pathArxiu, O_RDONLY);
 
     if (fdArxiu < 0){
+        printf("Error en apertura\n");
         return 4;
     } else{
         int bytesSent = 0;
@@ -328,8 +322,9 @@ int sendImage(struct dirent* ent){
                 bytesRead = read(fdArxiu, aux, FILE_TRAMA_MAXSIZE);
             }
 
-            if (bytesRead < 0){
-                return 4;
+            if (bytesRead <= 0){
+                printf("Error en lectura (connexion) \n");
+                return 1;
             }else{
                 // Copiem el length i la data de la trama
                 imageTrama.length = (short) bytesRead;
@@ -340,6 +335,7 @@ int sendImage(struct dirent* ent){
                 int disconnected = sendTrama(imageTrama);
                 if (disconnected){
                     close(fdArxiu);
+                    printf("Error de connexio\n");
                     return 1;
                 } else{
                     bytesSent += bytesRead;
@@ -349,48 +345,45 @@ int sendImage(struct dirent* ent){
 
         close(fdArxiu);
 
+        // Calculem el checksum de l'arxiu
+        char* checksum = makeChecksum(pathArxiu);
 
-        // todo: checksum --> PROVISIONAL
+        Trama checksumTrama;
+        checksumTrama.type = TYPE_SENDFILE;
+        checksumTrama.header = HEADER_SENDFILE_ENDFILE;
+        checksumTrama.length = (short) 32;
+        checksumTrama.data = (char*)malloc(32 * sizeof(char));
+        checksumTrama.data = strcpy(checksumTrama.data, checksum);
 
-
-
-        Trama checkshumTrama;
-        checkshumTrama.type = TYPE_SENDFILE;
-        checkshumTrama.header = HEADER_SENDFILE_ENDFILE;
-        //checkshumTrama.length = (short) strlen("[12345678901234567890123456789012]");
-        checkshumTrama.length = (short) strlen(HEADER_SENDFILE_RESPONSE_OK_IMAGE);
-        checkshumTrama.data = (char*)malloc(checkshumTrama.length * sizeof(char));
-        // Checksum provisional
-        checkshumTrama.data = strcpy(imageTrama.data, HEADER_SENDFILE_RESPONSE_OK_IMAGE);
-
-        int disconected = sendTrama(checkshumTrama);
+        int disconected = sendTrama(checksumTrama);
         if (disconected){
+            printf("Error de connexio\n");
             return 1;
         }else{
-            checkshumTrama = receiveTrama();
+            checksumTrama = receiveTrama();
 
             //int solucio = -1;
             int solucio = 0;
 
-            if (checkshumTrama.length < 0){
+            if (checksumTrama.length < 0){
+                printf("Error de connexio\n");
                 solucio =  1;
             }else{
                 //mostraTrama(checkshumTrama);
                 //printf("STRL : %d \n", (int)strlen(checkshumTrama.header));
-                if (checkshumTrama.type != TYPE_SENDFILE){
+                if (checksumTrama.type != TYPE_SENDFILE){
+                    printf("Error de TIPUS\n");
                     solucio = 6;
                 }
 
-                if (strcmp(checkshumTrama.header, HEADER_SENDFILE_RESPONSE_OK_IMAGE) == 0){
+                if (strcmp(checksumTrama.header, HEADER_SENDFILE_RESPONSE_OK_IMAGE) == 0){
+                    printf("TOT OK\n");
                     solucio = 0;
                 }
 
-                if (strcmp(checkshumTrama.header, HEADER_SENDFILE_RESPONSE_KO_IMAGE) == 0){
+                if (strcmp(checksumTrama.header, HEADER_SENDFILE_RESPONSE_KO_IMAGE) == 0){
+                    printf("KO\n");
                     solucio =  2;
-                }
-
-                if(solucio < 0){
-                    solucio = 6;
                 }
             }
 

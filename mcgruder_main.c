@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
     int errorConnection = sendConnectionTrama();
     if (errorConnection == 1){
         // error a l'hora de connectar
-        desconnecta();
+        desconnectaForsaBruta();
     }else{
         // Connexio establerta amb exit
         run();

@@ -47,7 +47,7 @@ void mostraMissatgeDisconnecting(){
 
 void mostraMissatgeDisconnectingMcGruder(char* telescopeName){
     char buffer[100];
-    int bytes = sprintf(buffer, "Disconnecting from %s .\n", telescopeName);
+    int bytes = sprintf(buffer, "Disconnecting from %s \n", telescopeName);
     write(FD_OUT, buffer, (unsigned int) bytes);
 
     //write(FD_OUT, "Disconnecting from ", strlen("Disconnecting from ") * sizeof(char));
@@ -68,4 +68,16 @@ void mostraErrorRebreArxiu(char* filename){
     write(FD_OUT, "Error en la transmissio del fitxer ", strlen("Error en la transmissio del fitxer ") * sizeof(char));
     write(FD_OUT, filename, strlen(filename) * sizeof(char));
     write(FD_OUT, "\n", sizeof(char));
+}
+
+void mostraMissatgeReceivingData(char* mcgruderName){
+    write(FD_OUT, "Receiving data from ", strlen("Receiving data from ") * sizeof(char));
+    write(FD_OUT, mcgruderName, strlen(mcgruderName) * sizeof(char));
+    write(FD_OUT, " ... \n", strlen(" ... \n") * sizeof(char));
+}
+
+void mostraMissatgeFileReceived(char* filename){
+    write(FD_OUT, "File ", strlen("File ") * sizeof(char));
+    write(FD_OUT, filename, strlen(filename) * sizeof(char));
+    write(FD_OUT, " received. \n", strlen(" received. \n") * sizeof(char));
 }

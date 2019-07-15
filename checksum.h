@@ -5,10 +5,17 @@
 #ifndef MCGRUDER_CHECKSUM_H
 #define MCGRUDER_CHECKSUM_H
 
-#include "lionel_types.h"
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-//char* makeChecksum(char* filename);
-int main(int argc, char** argv);
+char* makeChecksum(char* filename);
 
 
 #endif //MCGRUDER_CHECKSUM_H

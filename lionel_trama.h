@@ -5,8 +5,8 @@
 #ifndef MCGRUDER_LIONEL_TRAMA_H
 #define MCGRUDER_LIONEL_TRAMA_H
 
-#include "lionel_types.h"
 #include "lionel_screen.h"
+#include "checksum.h"
 
 void mostraTrama(Trama connectionTrama);
 
@@ -43,5 +43,7 @@ int extensioMetadata(char* receivedData);
 Image getImageInfo(Trama received);
 
 void addNewImage(Image newImage);
+
+char* getMcGruderName(int fd);
 
 #endif //MCGRUDER_LIONEL_TRAMA_H
