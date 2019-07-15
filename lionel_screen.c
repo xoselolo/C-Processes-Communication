@@ -48,7 +48,7 @@ void mostraMissatgeDisconnecting(){
 void mostraMissatgeDisconnectingMcGruder(char* telescopeName){
     char buffer[100];
     int bytes = sprintf(buffer, "Disconnecting from %s \n", telescopeName);
-    write(FD_OUT, buffer, (unsigned int) bytes);
+    write(FD_OUT, buffer, bytes);
 
     //write(FD_OUT, "Disconnecting from ", strlen("Disconnecting from ") * sizeof(char));
     //write(FD_OUT, telescopeName, strlen(telescopeName) * sizeof(char));

@@ -95,3 +95,11 @@ void mostraErrorEnviarFitxer(char* filename){
 void mostraErrorConnexio(){
     write(FD_OUT, MSSG_ERROR_CONNECTION, strlen(MSSG_ERROR_CONNECTION) * sizeof(char));
 }
+
+void mostraMissatgePercentatge(int totalBytesRead, int size, char* filename){
+    float percentatge = (totalBytesRead/(float)size)*100;
+    char buff[100];
+    int msg;
+    msg = sprintf(buff, "\tFile '%s' %.2f%c  sent. \n", filename, percentatge, '%');
+    write(FD_OUT, buff, msg);
+}

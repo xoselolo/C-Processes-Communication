@@ -13,7 +13,7 @@ char* makeChecksum(char* filename){
     int fd_pipeFillToPare[2];
     if (pipe(fd_pipeFillToPare) < 0){
         printf("Error al crear la pipe!\n");
-        exit(-1);
+        return NULL;
     }
 
 
@@ -42,17 +42,16 @@ char* makeChecksum(char* filename){
 
             waitpid(sonPID, &status, WUNTRACED);
 
-            char* md5sum = (char*)malloc(sizeof(char) * 32);
-            read(fd_pipeFillToPare[PIPE_READ], md5sum, sizeof(char) * 32);
-
-            printf("CHECKSUM: %s \n", md5sum);
+            char* md5sum = (char*)malloc(sizeof(char) * 33);
+            read(fd_pipeFillToPare[PIPE_READ], md5sum, sizeof(char) * 32); // 40 per l'error de corrupted size vs prev size
+            md5sum[32] = '\0';
 
             close(fd_pipeFillToPare[PIPE_READ]);
-
-            printf("Tot ha anat be!\n");
 
             return md5sum;
 
             break;
     }
+
+    return NULL;
 }

@@ -48,10 +48,6 @@ void parseDirectory(){
                 int errorSendFile = sendFile(ent);
 
                 if (errorSendFile > 0){
-                    if (errorSendFile == 2){
-                        // Extensio erronia
-                        printf("Error en extensio!\n");
-                    }
                     // Error al enviar l'arxiu (Lionel ha caigut (1) o be el checksum es incorrecte(2))
                     mostraErrorEnviarFitxer(ent->d_name);
 
@@ -96,6 +92,7 @@ int sendFile(struct dirent* ent) {
     char* previousPath;
     int imageError = 0;
     int txtError = 0;
+    int prevLength = 0;
 
     mostraMissatgeFileName(ent->d_name);
 
@@ -139,9 +136,12 @@ int sendFile(struct dirent* ent) {
 
         case FILE_TYPE_FOLDER:
             // Ens guardem el directori en el que ens trobem
-            previousPath = (char*)malloc(strlen(pathAcumulat) * sizeof(char));
+            prevLength = strlen(pathAcumulat);
+
+            previousPath = (char*)malloc(prevLength * sizeof(char));
             previousPath = strcpy(previousPath, pathAcumulat);
 
+            pathAcumulat = realloc(pathAcumulat, (prevLength + strlen(ent->d_name) + 1) * sizeof(char));
             pathAcumulat = strcat(pathAcumulat, ent->d_name);
             pathAcumulat = strcat(pathAcumulat, "/");
             //printf("Path acumulat: %s \n", pathAcumulat);
@@ -149,12 +149,13 @@ int sendFile(struct dirent* ent) {
             // Com es un directori, fem la crida recursiva per a parsejar tot l'arbre de directoris
             parseDirectory();
 
+            // Eliminem el directori
+            deleteFile(pathAcumulat);
+
             free(pathAcumulat);
             pathAcumulat = (char*)malloc(sizeof(char) * strlen(previousPath));
             pathAcumulat = strcpy(pathAcumulat, previousPath);
-
-            // Eliminem el directori
-            deleteFile(ent->d_name);
+            free(previousPath);
             return 0;
 
             break;
@@ -174,6 +175,7 @@ int checkType (struct dirent* ent){
         // Es tracta d'un fitxer
         // veiem quina extensio te
         char* extension = getExtensionArxiu(ent);
+        printf("Extension 2: %s \n", extension);
         if (strcmp(extension, FILE_EXTENSION_IMAGE) == 0){
             free(extension);
             return FILE_TYPE_IMAGE;
@@ -302,6 +304,7 @@ int sendImage(struct dirent* ent){
     int fdArxiu = open(pathArxiu, O_RDONLY);
 
     if (fdArxiu < 0){
+        free(pathArxiu);
         printf("Error en apertura\n");
         return 4;
     } else{
@@ -315,47 +318,65 @@ int sendImage(struct dirent* ent){
         while (bytesSent < size){
             int bytesRestantes = size - bytesSent;
             if (bytesRestantes < FILE_TRAMA_MAXSIZE){
-                aux = (char*)malloc(bytesRestantes * sizeof(char));
+                aux = (char*)malloc((bytesRestantes+1) * sizeof(char));
                 bytesRead = read(fdArxiu, aux, bytesRestantes * sizeof(char));
+                aux[bytesRestantes] = '\0';
             }else{
-                aux = (char*)malloc(FILE_TRAMA_MAXSIZE * sizeof(char));
+                aux = (char*)malloc((FILE_TRAMA_MAXSIZE+1) * sizeof(char));
                 bytesRead = read(fdArxiu, aux, FILE_TRAMA_MAXSIZE);
+                aux[FILE_TRAMA_MAXSIZE] = '\0';
             }
 
             if (bytesRead <= 0){
+                free(aux);
+                free(pathArxiu);
                 printf("Error en lectura (connexion) \n");
                 return 1;
             }else{
                 // Copiem el length i la data de la trama
                 imageTrama.length = (short) bytesRead;
-                imageTrama.data = (char*)malloc(sizeof(char) * bytesRead);
-                imageTrama.data = strcpy(imageTrama.data, aux);
+                imageTrama.data = aux;
+                //imageTrama.data = (char*)malloc(sizeof(char) * bytesRead);
+                //imageTrama.data = strcpy(imageTrama.data, aux);
+                //free(aux);
 
                 // Enviem la trama
                 int disconnected = sendTrama(imageTrama);
+                free(imageTrama.data);
                 if (disconnected){
                     close(fdArxiu);
+                    free(pathArxiu);
                     printf("Error de connexio\n");
                     return 1;
+
                 } else{
                     bytesSent += bytesRead;
+                    mostraMissatgePercentatge(bytesSent, size, ent->d_name);
                 }
             }
         }
 
         close(fdArxiu);
 
+
         // Calculem el checksum de l'arxiu
         char* checksum = makeChecksum(pathArxiu);
+        printf("CHECKSUM: -%s- \n", checksum);
+
+        free(pathArxiu);
+
 
         Trama checksumTrama;
         checksumTrama.type = TYPE_SENDFILE;
         checksumTrama.header = HEADER_SENDFILE_ENDFILE;
         checksumTrama.length = (short) 32;
-        checksumTrama.data = (char*)malloc(32 * sizeof(char));
-        checksumTrama.data = strcpy(checksumTrama.data, checksum);
+        //checksumTrama.data = (char*)malloc(32 * sizeof(char));
+        //checksumTrama.data = strcpy(checksumTrama.data, checksum);
+        checksumTrama.data = strdup(checksum);
+        free(checksum);
 
         int disconected = sendTrama(checksumTrama);
+        free(checksumTrama.data);
         if (disconected){
             printf("Error de connexio\n");
             return 1;
@@ -404,4 +425,5 @@ void deleteFile(char *fileName) {
     char* filePath = (char*)malloc(sizeof(char) * (strlen(pathAcumulat) + strlen(fileName)));
     sprintf(filePath, "%s%s", pathAcumulat, fileName);
     remove(filePath);
+    free(filePath);
 }

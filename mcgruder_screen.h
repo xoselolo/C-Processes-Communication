@@ -43,5 +43,6 @@ void mostraMissatgeSendingFile(char* filename);
 void mostraMissatgeFileSent();
 void mostraErrorEnviarFitxer(char* filename);
 void mostraErrorConnexio();
+void mostraMissatgePercentatge(int totalBytesRead, int size, char* filename);
 
 #endif //MCGRUDER_SCREEN_H

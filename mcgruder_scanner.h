@@ -19,7 +19,7 @@
 #define FILE_TYPE_NOTVALID 4
 #define FILE_EXTENSION_IMAGE ".jpg"
 #define FILE_EXTENSION_TXT ".txt"
-#define FILE_TRAMA_MAXSIZE 100
+#define FILE_TRAMA_MAXSIZE 10000
 
 // Capceleres
 

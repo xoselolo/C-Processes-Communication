@@ -45,6 +45,7 @@ void killMcGruders(){
         disconnectionTrama.length = 0;
         disconnectionTrama.data = (char*)malloc(sizeof(char) * 0);
         sendTrama(disconnectionTrama, mcGrudersList.mcgruders[i].fdMcgruder);
+        free(disconnectionTrama.data);
 
         // Tanquem el canal de comunicacio
         close(mcGrudersList.mcgruders[i].fdMcgruder);
@@ -90,8 +91,11 @@ void creaNouMcGruder(int fdNewMcgruder){
             int mcgruderDown = sendTrama(connectionTrama, fdNewMcgruder);
             if (mcgruderDown){
                 printf("ERRRR 2\n");
+                free(telescopeName);
                 mostraErrorNewMcgruder();
             }else{
+                free(connectionTrama.header);
+                free(connectionTrama.data);
                 // creem el nou McGruder
                 Mcgruder newMcGruder;
 
@@ -125,6 +129,8 @@ void creaNouMcGruder(int fdNewMcgruder){
             free(connectionTrama.data);
             connectionTrama.data = (char*)malloc(sizeof(char) * 0);
             sendTrama(connectionTrama, fdNewMcgruder);
+            free(connectionTrama.header);
+            free(connectionTrama.data);
             printf("ERRRR 4\n");
             mostraErrorNewMcgruder();
         }
@@ -138,9 +144,11 @@ void addNewMcGruder(Mcgruder mcgruder){
     //mcGrudersList.mcgruders[newSize - 1] = mcgruder;
     mcGrudersList.mcgruders[newSize - 1].thread = mcgruder.thread;
     mcGrudersList.mcgruders[newSize - 1].telescopeName = (char*)malloc(strlen(mcgruder.telescopeName) * sizeof(char));
-    strcpy(mcGrudersList.mcgruders[newSize - 1].telescopeName, mcgruder.telescopeName);
+    mcGrudersList.mcgruders[newSize - 1].telescopeName = strcpy(mcGrudersList.mcgruders[newSize - 1].telescopeName, mcgruder.telescopeName);
     mcGrudersList.mcgruders[newSize - 1].fdMcgruder = mcgruder.fdMcgruder;
     mcGrudersList.numMcGrudersConnected = newSize;
+
+    free(mcgruder.telescopeName);
 }
 
 int indexOfMcGruder(int fdMcGruder){
@@ -254,7 +262,7 @@ void * mcGruderFunc(void* arg){
                     printf("Extensio de l'arxiu desconeguda\n");
                     break;
                 case 5:
-                    // Hem rebut l'arxiu perfectament
+                    // Hem rebut l'arxiu perfectament (ja no cal fer res mes)
                     break;
                 case 6:
                     printf("Error al crear l'arxiu!\n");

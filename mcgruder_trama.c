@@ -48,8 +48,9 @@ int enviaTramaDesconnexio(){
     disconnectionTrama.header = HEADER_DISCONNECTION;
     disconnectionTrama.length = (short) strlen(configuracio.telescopeName);
     disconnectionTrama.data = (char*) malloc(disconnectionTrama.length * sizeof(char));
-    strcpy(disconnectionTrama.data, configuracio.telescopeName);
+    disconnectionTrama.data = strcpy(disconnectionTrama.data, configuracio.telescopeName);
     int lionelDown = sendTrama(disconnectionTrama);
+    free(disconnectionTrama.data);
     if (lionelDown){
         // Lionel ha caigut
         return 1;
@@ -124,13 +125,13 @@ Trama receiveTrama(){
                 return receivedTrama;
             } else{
                 receivedTrama.header[i] = c;
-                if (c != ']'){
-                    i++;
-                    receivedTrama.header = realloc(receivedTrama.header, sizeof(char) * (i+1));
-                }
-            }
 
+                i++;
+                receivedTrama.header = realloc(receivedTrama.header, sizeof(char) * (i+1));
+
+            }
         }
+        receivedTrama.header[i] = '\0';
 
         disconnected = read(fdLionel, &receivedTrama.length, 2);
         if (disconnected <= 0){
@@ -138,7 +139,7 @@ Trama receiveTrama(){
             return receivedTrama;
         }else{
             int nameLength = ((int)receivedTrama.length);
-            receivedTrama.data = (char*)malloc(sizeof(char) * nameLength);
+            receivedTrama.data = (char*)malloc(sizeof(char) * (nameLength + 1));
             for (i = 0; i < nameLength; i++) {
                 disconnected = read(fdLionel, &c, sizeof(char));
                 if (disconnected <= 0){
@@ -147,8 +148,8 @@ Trama receiveTrama(){
                 }else{
                     receivedTrama.data[i] = c;
                 }
-
             }
+            receivedTrama.data[nameLength] = '\0';
 
             mostraTrama(receivedTrama);
             return receivedTrama;
@@ -162,13 +163,28 @@ int sendConnectionTrama(){
 
     connectionTrama.type = TYPE_CONNECTION;
     connectionTrama.header = (char*)malloc(strlen(HEADER_CONNECTION) * sizeof(char));
-    strcpy(connectionTrama.header, HEADER_CONNECTION);
+    connectionTrama.header = strcpy(connectionTrama.header, HEADER_CONNECTION);
     connectionTrama.length = (short) strlen(configuracio.telescopeName);
     connectionTrama.data = (char*)malloc(sizeof(connectionTrama.length));
-    strcpy(connectionTrama.data, configuracio.telescopeName);
+    connectionTrama.data = strcpy(connectionTrama.data, configuracio.telescopeName);
 
-    sendTrama(connectionTrama);
+    int connError = sendTrama(connectionTrama);
+    free(connectionTrama.header);
+    free(connectionTrama.data);
+
+    if (connError){
+        mostraErrorConnexio();
+        return 1;
+    }
+
     connectionTrama = receiveTrama();
+    if (connectionTrama.length < 0){
+        mostraErrorConnexio();
+        free(connectionTrama.header);
+        free(connectionTrama.data);
+        return 1;
+    }
+
     if (strcmp(connectionTrama.header, HEADER_CONNECTION_RESPONSE_KO) == 0){
         mostraErrorConnexio();
         free(connectionTrama.data);
