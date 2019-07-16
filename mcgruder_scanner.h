@@ -12,7 +12,7 @@
 #include "checksum.h"
 
 // Constants
-#define DIR_PATH "files/"
+#define DIR_PATH "files/\0"
 #define FILE_TYPE_IMAGE 1
 #define FILE_TYPE_TXT 2
 #define FILE_TYPE_FOLDER 3

@@ -18,7 +18,7 @@ void mostraTrama(Trama connectionTrama){
 
 int sendTrama(Trama trama, int fd){
     //write(fdLionel, &trama, sizeof(trama));
-    mostraTrama(trama);
+    //mostraTrama(trama);
 
     int disconnected = write(fd, &trama.type, 1);
     if (disconnected < 0){
@@ -89,7 +89,7 @@ Trama receiveTrama(int fd){
             }
             receivedTrama.data[nameLength] = '\0';
 
-            mostraTrama(receivedTrama);
+            //mostraTrama(receivedTrama);
             return receivedTrama;
         }
 
@@ -140,9 +140,13 @@ int tractaTrama(Trama received, int fd){
                                 return 7;
                             }
                             mostraMissatgeReceivingData(mcgrduerName);
-                            char* path = (char*)malloc(0 * sizeof(char));
-                            path = strcpy(path, "files/");
+                            //char* path = (char*)malloc(0 * sizeof(char));
+                            //path = strcpy(path, "files/");
+                            int length = strlen(image.name) + 6;
+                            char* path = strdup("files/\0");
+                            path = (char*) realloc(path, (length + 1) * sizeof(char));
                             path = strcat(path, image.name);
+                            path[length] = '\0';
 
                             int fdImatge = creat(path, 0777);
                             if (fdImatge < 0){
@@ -194,8 +198,6 @@ int tractaTrama(Trama received, int fd){
                                     }else{
                                         if (strcmp(received.header, HEADER_SENDFILE_DATA) == 0){
                                             write(fdImatge, received.data, received.length * sizeof(char));
-                                            write(1, received.data, received.length * sizeof(char));
-                                            //fileContent = strcat(fileContent, received.data);
                                         } else{
                                             break;
                                         }
@@ -203,24 +205,15 @@ int tractaTrama(Trama received, int fd){
                                 }
                             }
 
-                            // Ja hem acabat de llegir tot el contingut i hem rebut la trama de endfile
-                            // Hem rebut be la imatge, muntem la imatge
-                            /*char* path = (char*)malloc(0 * sizeof(char));
-                            path = strcpy(path, "files/");
-                            path = strcat(path, image.name);
-
-                            int fdImatge = creat(path, 0777);
-                            if (fdImatge < 0){
-                                printf("Error al intentar crear arxiu!\n");
-                                free(fileContent);
-                                free(path);
-                                return 6;
-                            }
-                            write(fdImatge, fileContent, image.size * sizeof(char));*/
                             close(fdImatge);
 
                             // comprovem el checksum
                             char* myChecksum = makeChecksum(path);
+                            if (myChecksum == NULL){
+                                printf("NO FORK\n");
+                                mostraErrorRebreArxiu(image.name);
+                                return 6;
+                            }
                             printf("Lionel checksum -%s- \n", myChecksum);
 
                             // Comparem el checksum calculat (provisional) amb el rebut
@@ -405,10 +398,11 @@ Image getImageInfo(Trama received){
 
     // Obtenim el nom del fitxer
     int nameLength = received.length - i;
-    image.name = (char*)malloc(nameLength * sizeof(char));
+    image.name = (char*)malloc((nameLength + 1) * sizeof(char));
     for (int k = 0; k < nameLength - 1; k++) {
         image.name[k] = received.data[i+k];
     }
+    image.name[nameLength] = '\0';
 
     return image;
 }

@@ -9,6 +9,7 @@
 
 char* makeChecksum(char* filename){
     int status;
+    printf("Anem a calcular el checksum\n");
 
     int fd_pipeFillToPare[2];
     if (pipe(fd_pipeFillToPare) < 0){
@@ -22,6 +23,7 @@ char* makeChecksum(char* filename){
         case -1:
             // Error
             printf("Error al crear el fork!\n");
+            return NULL;
             exit(-1);
             break;
         case 0:
