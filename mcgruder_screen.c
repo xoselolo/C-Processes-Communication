@@ -103,3 +103,7 @@ void mostraMissatgePercentatge(int totalBytesRead, int size, char* filename){
     msg = sprintf(buff, "\tFile '%s' %.2f%c  sent. \n", filename, percentatge, '%');
     write(FD_OUT, buff, msg);
 }
+
+void mostraErrorTipusDeFitxer(){
+    write(FD_OUT, MSSG_ERROR_FILE_TYPE, strlen(MSSG_ERROR_FILE_TYPE) * sizeof(char));
+}

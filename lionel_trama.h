@@ -42,7 +42,16 @@ int extensioMetadata(char* receivedData);
  */
 Image getImageInfo(Trama received);
 
+/**
+ * Funcio per a obtenir les dades del camp data de la metadata
+ * Recordem el format del camp data de la trama de metadata
+ * DATA: "[__EXTENSIO__&__MIDAFITXER__&__DATARECEPCIO__&__NOMFITXER__]"
+ */
+Txt getTextInfo(Trama received);
+
 void addNewImage(Image newImage);
+
+void addNewTxt(Txt txt);
 
 char* getMcGruderName(int fd);
 

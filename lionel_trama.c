@@ -140,8 +140,7 @@ int tractaTrama(Trama received, int fd){
                                 return 7;
                             }
                             mostraMissatgeReceivingData(mcgrduerName);
-                            //char* path = (char*)malloc(0 * sizeof(char));
-                            //path = strcpy(path, "files/");
+
                             int length = strlen(image.name) + 6;
                             char* path = strdup("files/\0");
                             path = (char*) realloc(path, (length + 1) * sizeof(char));
@@ -275,8 +274,63 @@ int tractaTrama(Trama received, int fd){
 
                             break;
                         case 2:
-                            // Text TXT
+                            // Text TXT --------------------------------------------------------------------------------
                             printf("Es un fitxer de text!\n");
+                            txt = getTextInfo(received);
+
+                            // Mostrem missatge rebent informacio del mcgruder
+                            mcgrduerName = getMcGruderName(fd);
+                            if (mcgrduerName == NULL){
+                                mostraErrorRebreArxiu(txt.name);
+                                return 7;
+                            }
+                            mostraMissatgeReceivingData(mcgrduerName);
+
+                            int lengthTxt = strlen(txt.name) + 6;
+                            char* pathTxt = strdup("files/\0");
+                            pathTxt = (char*) realloc(pathTxt, (lengthTxt + 1) * sizeof(char));
+                            pathTxt = strcat(pathTxt, txt.name);
+                            pathTxt[lengthTxt] = '\0';
+
+                            int fdTxt = creat(pathTxt, 0777);
+                            if (fdTxt < 0){
+                                printf("Error al intentar crear arxiu!\n");
+                                free(pathTxt);
+                                return 6;
+                            }
+
+                            // Hem creat l'arxiu buit
+                            // Ara rebem la trama del contingut del fitxer
+                            Trama txtContentTrama = receiveTrama(fd);
+                            if (txtContentTrama.length < 0){
+                                remove(pathTxt);
+                                mostraErrorRebreArxiu(txt.name);
+                                return 1;
+                            }
+
+                            // Escribim el camp data a fuego al arxiu
+                            write(fdTxt, txtContentTrama.data, txt.size * sizeof(char));
+
+                            close(fdTxt);
+
+                            Trama fileOkTrama;
+                            fileOkTrama.type = TYPE_SENDFILE;
+                            fileOkTrama.header = HEADER_SENDFILE_RESPONSE_OK_TEXT;
+                            fileOkTrama.length = 0;
+                            fileOkTrama.data = (char*)malloc(sizeof(char));
+
+                            int disconnected = sendTrama(fileOkTrama, fd);
+                            if (disconnected){
+                                remove(pathTxt);
+                                mostraErrorRebreArxiu(txt.name);
+                                return 1;
+                            }
+
+                            addNewTxt(txt);
+                            mostraMissatgeFileReceived(txt.name);
+
+                            free(pathTxt);
+                            return 5;
                             break;
                     }
                     return 0;
@@ -407,6 +461,83 @@ Image getImageInfo(Trama received){
     return image;
 }
 
+Txt getTextInfo(Trama received){
+    // creem el txt
+    Txt txt;
+
+    txt.size = 0;
+    // Obtenim el tamany de la imatge
+    int i = 6;
+    while (received.data[i] != '&'){
+        txt.size = txt.size * 10 + (received.data[i] - '0');
+        i++;
+    }
+
+    i++;
+
+    int any = 0;
+    // Obtenim l'any
+    while (received.data[i] != '-'){
+        any = any * 10 + (received.data[i] - '0');
+        i++;
+    }
+
+    i++;
+
+    int mes = 0;
+    // Obtenim el mes
+    while (received.data[i] != '-'){
+        mes = mes * 10 + (received.data[i] - '0');
+        i++;
+    }
+
+    i++;
+
+    int dia = 0;
+    // Obtenim el dia
+    while (received.data[i] != ' '){
+        dia = dia * 10 + (received.data[i] - '0');
+        i++;
+    }
+
+    txt.data.any = any;
+    txt.data.mes = mes;
+    txt.data.dia = dia;
+
+    i++;
+
+    int hora = 0;
+    // Obtenim la hora
+    while (received.data[i] != ':'){
+        hora = hora * 10 + (received.data[i] - '0');
+        i++;
+    }
+
+    i++;
+
+    int minut = 0;
+    // Obtenim el minut
+    while (received.data[i] != '&'){
+        minut = minut * 10 + (received.data[i] - '0');
+        i++;
+    }
+
+    txt.hora.hora = hora;
+    txt.hora.minut = minut;
+
+    i++;
+
+    // Obtenim el nom del fitxer
+    int nameLength = received.length - i;
+    txt.name = (char*)malloc((nameLength + 1) * sizeof(char));
+    for (int k = 0; k < nameLength - 1; k++) {
+        txt.name[k] = received.data[i+k];
+    }
+    txt.name[nameLength] = '\0';
+
+    return txt;
+}
+
 void addNewImage(Image newImage){
 
     // Esperem al semafor i el bloquejem
@@ -434,6 +565,33 @@ void addNewImage(Image newImage){
     // Desbloquejem el semafor
     pthread_mutex_unlock(&mutexLlistaImatges);
 
+}
+
+void addNewTxt(Txt newTxt){
+    // Esperem al semafor i el bloquejem
+    pthread_mutex_lock(&mutexLlistaTxts);
+
+    int index = txtList.numTxt;
+    txtList.numTxt++;
+    txtList.txts = realloc(txtList.txts, txtList.numTxt * sizeof(Txt));
+
+    // Copiem els valors de la nova imatge
+    txtList.txts[index].name = (char*)malloc(sizeof(char) * strlen(newTxt.name));
+    txtList.txts[index].name = strcpy(txtList.txts[index].name, newTxt.name);
+    free(newTxt.name);
+    txtList.txts[index].size = newTxt.size;
+    txtList.txts[index].data = newTxt.data;
+    txtList.txts[index].hora = newTxt.hora;
+
+    printf("Nou txt desat!\n");
+    int numTxts = txtList.numTxt;
+    printf("Tenim %d txt guardats \n", numTxts);
+    for (int i = 0; i < numTxts; i++) {
+        printf("Txt: %s \n", txtList.txts[i].name);
+    }
+
+    // Desbloquejem el semafor
+    pthread_mutex_unlock(&mutexLlistaTxts);
 }
 
 char* getMcGruderName(int fd){

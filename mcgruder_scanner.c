@@ -137,15 +137,11 @@ int sendFile(struct dirent* ent) {
         case FILE_TYPE_FOLDER:
             // Ens guardem el directori en el que ens trobem
             prevLength = strlen(pathAcumulat);
-
             previousPath = strdup(pathAcumulat);
-            //previousPath = (char*)malloc(prevLength * sizeof(char));
-            //previousPath = strcpy(previousPath, pathAcumulat);
 
             pathAcumulat = realloc(pathAcumulat, (prevLength + strlen(ent->d_name) + 1) * sizeof(char));
             pathAcumulat = strcat(pathAcumulat, ent->d_name);
             pathAcumulat = strcat(pathAcumulat, "/\0");
-            //printf("Path acumulat: %s \n", pathAcumulat);
 
             // Com es un directori, fem la crida recursiva per a parsejar tot l'arbre de directoris
             parseDirectory();
@@ -162,6 +158,8 @@ int sendFile(struct dirent* ent) {
 
             break;
         case FILE_TYPE_NOTVALID:
+            mostraErrorTipusDeFitxer();
+            deleteFile(ent->d_name);
             return 2;
             break;
     }
@@ -190,10 +188,11 @@ int checkType (struct dirent* ent){
 }
 
 char* getExtensionArxiu(struct dirent* ent){
-    char* extension = (char*)malloc(sizeof(char) * 4);
+    char* extension = (char*)malloc(sizeof(char) * 5);
     int initial = strlen(ent->d_name) - 4;
 
     extension = strncpy(extension, ent->d_name + initial, 4);
+    extension[4] = '\0';
     return extension;
 }
 
@@ -420,8 +419,98 @@ int sendImage(struct dirent* ent){
 }
 
 int sendTxt(struct dirent* ent){
-    // todo
-    return 0;
+    // construim el path del fitxer
+    char* name = strdup(ent->d_name);
+    int length = strlen(pathAcumulat) + strlen(name);
+    //char* pathArxiu = (char*)malloc(length * sizeof(char));
+    char* pathArxiu = strdup(pathAcumulat);
+    //pathArxiu = strcat(pathArxiu, pathAcumulat);
+    pathArxiu = (char*)realloc(pathArxiu, (length + 1) * sizeof(char));
+    pathArxiu = strcat(pathArxiu, name);
+    pathArxiu[length] = '\0';
+    write(1, "PATH ARXIU: ", 12);
+    write(1, pathArxiu, length);
+    write(1, "\n", 1);
+
+    int size = getSizeArxiu(pathArxiu);
+    if (size < 0){
+        printf("Error en size \n");
+        return 3;
+    }
+    Data dataActual = getDataActual();
+    Hora horaActual = getHoraActual();
+
+    Trama imageTrama;
+    imageTrama.type = TYPE_SENDFILE;
+    imageTrama.header = HEADER_SENDFILE_METADATA;
+
+    char* dataHoraString = toStringDataHoraMetadata(dataActual, horaActual);
+
+    // char* imageTramaData = formaDataMetadata(".jpg", size, dataHoraString, pathArxiu);
+    char* imageTramaData = formaDataMetadata(".txt", size, dataHoraString, ent->d_name);
+    int dataLength = strlen(imageTramaData);
+    free(dataHoraString); // Alliberem la string on hem construit la data i hora (i que ja hem copiat)
+
+    imageTrama.length = (short) dataLength;
+    imageTrama.data = (char*)malloc(dataLength * sizeof(char));
+    imageTrama.data = strcpy(imageTrama.data, imageTramaData);
+    //free(imageTramaData); // Alliberem la string on hem construit el camp data (i que ja hem copiat)
+
+    int disconnection = sendTrama(imageTrama);
+    //free(imageTrama.data);
+
+    if (disconnection){
+        printf("Error de connexio\n");
+        return 1; // Error de connexio
+    }
+
+    int fdArxiu = open(pathArxiu, O_RDONLY);
+
+    if (fdArxiu < 0){
+        free(pathArxiu);
+        printf("Error en apertura\n");
+        return 4;
+    } else{
+        // Podem enviar el contingut del fitxer --> todo
+        free(imageTrama.data);
+
+        imageTrama.type = TYPE_SENDFILE;
+        imageTrama.header = HEADER_SENDFILE_DATA;
+        imageTrama.length = (short) size;
+        imageTrama.data = (char*)malloc(size * sizeof(char));
+        read(fdArxiu, imageTrama.data, size * sizeof(char));
+
+        //mostraTrama(imageTrama);
+
+        disconnection = sendTrama(imageTrama);
+        if (disconnection){
+            printf("Error de connexio\n");
+            return 1;
+        }
+
+        Trama fileOkTrama = receiveTrama();
+        if (fileOkTrama.length < 0){
+            printf("Error de connexio\n");
+            return 1;
+        }
+
+        if (fileOkTrama.type == TYPE_DISCONNECTION){
+            return 1;
+        }
+
+        if (fileOkTrama.type != TYPE_SENDFILE){
+            return 3; // Trama desconeguda
+        }
+
+        // Sabem que es del tipus sendfile, mirem el header
+        if (strcmp(fileOkTrama.header, HEADER_SENDFILE_RESPONSE_OK_TEXT) == 0){
+            // L'arxiu s'ha enviat be
+            deleteFile(pathArxiu);
+            return 0;
+        }else{
+            return 2;
+        }
+    }
 }
 
 void deleteFile(char *fileName) {
