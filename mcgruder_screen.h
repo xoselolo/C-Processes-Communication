@@ -17,6 +17,7 @@
 #define MSSG_ERROR_FORMAT_FITXER_CONFIGURACIO "Error, format de l'arxiu de configuracio incorrecte!\n"
 #define MSSG_ERROR_OPERTURA_DIRECTORI "Error, no s'ha pogut obrir el directori "
 #define MSSG_ERROR_CONNECTION "Error, no s'ha pogut establir connexio amb Lionel!\n"
+#define MSSG_ERROR_FILE_TYPE "Error, tipus de fitxer no valid!\n"
 
 #define MSSG_CONNECTING "Connecting to Lionel...\n"
 #define MSSG_CONNREADY "Connection ready.\n"
@@ -44,5 +45,6 @@ void mostraMissatgeFileSent();
 void mostraErrorEnviarFitxer(char* filename);
 void mostraErrorConnexio();
 void mostraMissatgePercentatge(int totalBytesRead, int size, char* filename);
+void mostraErrorTipusDeFitxer();
 
 #endif //MCGRUDER_SCREEN_H
