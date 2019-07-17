@@ -78,13 +78,13 @@ void creaNouMcGruder(int fdNewMcgruder){
             mostraMissatgeConnectionReady(connectionTrama.data);
 
             int nameLength = connectionTrama.length;
-            char* telescopeName = (char*)malloc(nameLength * sizeof(char));
+            char* telescopeName = (char*)malloc(nameLength * sizeof(char) + 1);
             telescopeName = strcpy(telescopeName, connectionTrama.data);// copiem el nom
 
             // Enviem CONOK to mcgruder
             free(connectionTrama.header);
             connectionTrama.header = (char*)malloc(sizeof(char) * strlen(HEADER_CONNECTION_RESPONSE_OK));
-            strcpy(connectionTrama.header, HEADER_CONNECTION_RESPONSE_OK);
+            connectionTrama.header = strcpy(connectionTrama.header, HEADER_CONNECTION_RESPONSE_OK);
             connectionTrama.length = 0;
             free(connectionTrama.data);
             connectionTrama.data = (char*)malloc(sizeof(char) * 0);
@@ -99,8 +99,8 @@ void creaNouMcGruder(int fdNewMcgruder){
                 // creem el nou McGruder
                 Mcgruder newMcGruder;
 
-                newMcGruder.telescopeName = (char*)malloc(sizeof(char) * nameLength);
-                strcpy(newMcGruder.telescopeName, telescopeName);
+                newMcGruder.telescopeName = (char*)malloc(sizeof(char) * nameLength + 1);
+                newMcGruder.telescopeName = strcpy(newMcGruder.telescopeName, telescopeName);
 
                 free(telescopeName);
                 newMcGruder.fdMcgruder = fdNewMcgruder;
@@ -124,7 +124,7 @@ void creaNouMcGruder(int fdNewMcgruder){
             // Enviem CONKO to mcgruder
             free(connectionTrama.header);
             connectionTrama.header = (char*)malloc(sizeof(char) * strlen(HEADER_CONNECTION_RESPONSE_KO));
-            strcpy(connectionTrama.header, HEADER_CONNECTION_RESPONSE_KO);
+            connectionTrama.header = strcpy(connectionTrama.header, HEADER_CONNECTION_RESPONSE_KO);
             connectionTrama.length = 0;
             free(connectionTrama.data);
             connectionTrama.data = (char*)malloc(sizeof(char) * 0);
@@ -143,7 +143,7 @@ void addNewMcGruder(Mcgruder mcgruder){
     mcGrudersList.mcgruders = realloc(mcGrudersList.mcgruders, newSize * sizeof(Mcgruder));
     //mcGrudersList.mcgruders[newSize - 1] = mcgruder;
     mcGrudersList.mcgruders[newSize - 1].thread = mcgruder.thread;
-    mcGrudersList.mcgruders[newSize - 1].telescopeName = (char*)malloc(strlen(mcgruder.telescopeName) * sizeof(char));
+    mcGrudersList.mcgruders[newSize - 1].telescopeName = (char*)malloc(strlen(mcgruder.telescopeName) * sizeof(char) + 1);
     mcGrudersList.mcgruders[newSize - 1].telescopeName = strcpy(mcGrudersList.mcgruders[newSize - 1].telescopeName, mcgruder.telescopeName);
     mcGrudersList.mcgruders[newSize - 1].fdMcgruder = mcgruder.fdMcgruder;
     mcGrudersList.numMcGrudersConnected = newSize;
@@ -173,7 +173,7 @@ int deleteMcGruder(int fdMcGruder, int indexKnown){
                 if (i + 1 < mcGrudersList.numMcGrudersConnected){
                     // copiem element [i+1] a [i]
                     mcGrudersList.mcgruders[i].fdMcgruder = mcGrudersList.mcgruders[i+1].fdMcgruder;
-                    strcpy(mcGrudersList.mcgruders[i].telescopeName, mcGrudersList.mcgruders[i+1].telescopeName);
+                    mcGrudersList.mcgruders[i].telescopeName = strcpy(mcGrudersList.mcgruders[i].telescopeName, mcGrudersList.mcgruders[i+1].telescopeName);
                 }
             }
 
@@ -196,7 +196,7 @@ int deleteMcGruder(int fdMcGruder, int indexKnown){
             if (i + 1 < mcGrudersList.numMcGrudersConnected){
                 // copy i+1 into i
                 mcGrudersList.mcgruders[i].fdMcgruder = mcGrudersList.mcgruders[i+1].fdMcgruder;
-                strcpy(mcGrudersList.mcgruders[i].telescopeName, mcGrudersList.mcgruders[i+1].telescopeName);
+                mcGrudersList.mcgruders[i].telescopeName = strcpy(mcGrudersList.mcgruders[i].telescopeName, mcGrudersList.mcgruders[i+1].telescopeName);
             }
         }
 
@@ -218,7 +218,7 @@ int deleteMcGruder(int fdMcGruder, int indexKnown){
 void posaNomMcGruder(char* nom, int fdMcgruder){
     int index = indexOfMcGruder(fdMcgruder);
     if (index > 0){
-        strcpy(mcGrudersList.mcgruders[index].telescopeName, nom);
+        mcGrudersList.mcgruders[index].telescopeName = strcpy(mcGrudersList.mcgruders[index].telescopeName, nom);
     }
 }
 

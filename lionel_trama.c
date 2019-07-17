@@ -126,7 +126,7 @@ int tractaTrama(Trama received, int fd){
                 int tipus = extensioMetadata(received.data);
                 Image image;
                 Txt txt;
-                char* mcgrduerName;
+                char* mcgruderName;
                 if (tipus != 0){
                     switch (tipus){
                         case 1:
@@ -134,12 +134,13 @@ int tractaTrama(Trama received, int fd){
                             image = getImageInfo(received);
 
                             // Mostrem missatge rebent informacio del mcgruder
-                            mcgrduerName = getMcGruderName(fd);
-                            if (mcgrduerName == NULL){
+                            mcgruderName = getMcGruderName(fd);
+                            if (mcgruderName == NULL){
                                 mostraErrorRebreArxiu(image.name);
                                 return 7;
                             }
-                            mostraMissatgeReceivingData(mcgrduerName);
+
+                            mostraMissatgeReceivingData(mcgruderName);
                             //char* path = (char*)malloc(0 * sizeof(char));
                             //path = strcpy(path, "files/");
                             int length = strlen(image.name) + 6;
@@ -169,6 +170,7 @@ int tractaTrama(Trama received, int fd){
                                         remove(path);
                                         //free(fileContent);
                                         mostraErrorRebreArxiu(image.name);
+                                        received.data[strlen(received.data) - 1] = '\0';
                                         mostraMissatgeDisconnectingMcGruder(received.data);
                                         if (strcmp(received.header, HEADER_DISCONNECTION) == 0){
                                             free(received.header);
@@ -241,8 +243,9 @@ int tractaTrama(Trama received, int fd){
                                     return 1; // Mc gruder desconnectat
                                 }
 
-                                addNewImage(image);
                                 mostraMissatgeFileReceived(image.name);
+
+                                addNewImage(image);
 
                                 free(path);
                                 free(myChecksum);
@@ -288,11 +291,12 @@ int tractaTrama(Trama received, int fd){
             }
             return 0;
         case TYPE_DISCONNECTION:
+            received.data[strlen(received.data) - 1] = '\0';
             mostraMissatgeDisconnectingMcGruder(received.data);
             if (strcmp(received.header, HEADER_DISCONNECTION) == 0){
                 free(received.header);
                 received.header = (char*)malloc(sizeof(char) * strlen(HEADER_DISCONNECTION_RESPONSE_OK));
-                strcpy(received.header, HEADER_DISCONNECTION_RESPONSE_OK);
+                received.header = strcpy(received.header, HEADER_DISCONNECTION_RESPONSE_OK);
 
                 received.length = 0;
                 free(received.data);
@@ -402,7 +406,7 @@ Image getImageInfo(Trama received){
     for (int k = 0; k < nameLength - 1; k++) {
         image.name[k] = received.data[i+k];
     }
-    image.name[nameLength] = '\0';
+    image.name[nameLength - 1] = '\0';
 
     return image;
 }
@@ -453,8 +457,9 @@ char* getMcGruderName(int fd){
     if (index == -1){
         mcgruderName = NULL;
     }else{
-        mcgruderName = (char*)malloc(sizeof(char) * strlen(mcGrudersList.mcgruders[index].telescopeName));
+        mcgruderName = (char*)malloc(sizeof(char) * strlen(mcGrudersList.mcgruders[index].telescopeName) + 1);
         mcgruderName = strcpy(mcgruderName, mcGrudersList.mcgruders[index].telescopeName);
+        mcgruderName[strlen(mcgruderName) - 1] = '\0';
     }
 
     // Desbloquejem el semafor
