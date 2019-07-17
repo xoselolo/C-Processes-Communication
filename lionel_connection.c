@@ -14,6 +14,9 @@ void desconnecta(){
     // Destruim el semafor dels mcgruders
     pthread_mutex_destroy(&mutexLlistaMcGruders);
 
+    // Extreiem les imatges i els txts als arxius kalkun i els alliberem la memoria
+    kalkun();
+
     // Alliberem memoria
     alliberaConfiguracio();
 
@@ -58,6 +61,68 @@ void killMcGruders(){
 
     // Desbloquejem el semafor
     pthread_mutex_unlock(&mutexLlistaMcGruders);
+}
+
+void kalkun(){
+    int fdJPG = open("KalkunJPG.txt",O_WRONLY | O_CREAT | O_APPEND, 0644);
+    if (fdJPG < 0){
+        printf("No s'han pogut escriure les JPG\n");
+    }else{
+        // NOTA: Sempre escriurem \n al final de cada linia
+
+        // Esperem i bloquejem el semafor de les imatges
+        pthread_mutex_lock(&mutexLlistaImatges);
+
+        for (int i = 0; i < imagesList.numImages; i++){
+            char* entrada = NULL;
+            entrada = formaEntradaKalkunJPG(imagesList.images[i], entrada);
+            write(fdJPG, entrada, strlen(entrada) * sizeof(char));
+            free(entrada);
+        }
+
+        pthread_mutex_unlock(&mutexLlistaImatges);
+
+        close(fdJPG);
+    }
+
+    int fdTXT = open("KalkunTXT.txt",O_WRONLY | O_CREAT | O_APPEND, 0644);
+    if (fdTXT < 0){
+        printf("No s'han pogut escriure els TXT\n");
+    }else{
+        // NOTA: Sempre escriurem \n al final de cada linia
+
+        // Esperem i bloquejem el semafor dels txt
+        pthread_mutex_lock(&mutexLlistaTxts);
+
+        for (int i = 0; i < txtList.numTxt; i++){
+            char* entrada = NULL;
+            entrada = formaEntradaKalkunTXT(txtList.txts[i], entrada);
+            write(fdTXT, entrada, strlen(entrada) * sizeof(char));
+            free(entrada);
+        }
+
+        pthread_mutex_unlock(&mutexLlistaTxts);
+
+        close(fdTXT);
+    }
+}
+
+char* formaEntradaKalkunJPG(Image image, char* entrada){
+    char buffer[100];
+    sprintf(buffer, "%d-%d-%d %d:%d %s %d bytes\n", image.data.any, image.data.mes, image.data.dia, image.hora.hora,
+            image.hora.hora, image.name, image.size);
+
+    entrada = strdup(buffer);
+    return entrada;
+}
+
+char* formaEntradaKalkunTXT(Txt txt, char* entrada){
+    char buffer[100];
+    sprintf(buffer, "%d-%d-%d %d:%d %s %d bytes\n", txt.data.any, txt.data.mes, txt.data.dia, txt.hora.hora,
+            txt.hora.hora, txt.name, txt.size);
+
+    entrada = strdup(buffer);
+    return entrada;
 }
 
 

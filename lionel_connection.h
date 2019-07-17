@@ -12,6 +12,9 @@
 
 void desconnecta();
 void killMcGruders();
+void kalkun();
+char* formaEntradaKalkunJPG(Image image, char* entrada);
+char* formaEntradaKalkunTXT(Txt txt, char* entrada);
 
 /**
  * Metode per a crear un nou McGruder i desar-lo a l'estructura a partir del seu @param fdNewMcgruder
