@@ -253,21 +253,21 @@ int tractaTrama(Trama received, int fd){
                                 // Checksum error
                                 mostraErrorRebreArxiu(image.name);
 
-                                Trama tramaChecksumOk;
-                                tramaChecksumOk.type = TYPE_SENDFILE;
+                                Trama tramaChecksumKo;
+                                tramaChecksumKo.type = TYPE_SENDFILE;
                                 int length = strlen(HEADER_SENDFILE_RESPONSE_KO_IMAGE);
-                                tramaChecksumOk.header = (char*)malloc(length * sizeof(char));
-                                tramaChecksumOk.header = strcpy(tramaChecksumOk.header, HEADER_SENDFILE_RESPONSE_KO_IMAGE);
+                                tramaChecksumKo.header = (char*)malloc(length * sizeof(char));
+                                tramaChecksumKo.header = strcpy(tramaChecksumKo.header, HEADER_SENDFILE_RESPONSE_KO_IMAGE);
 
-                                tramaChecksumOk.length = 0;
-                                tramaChecksumOk.data = (char*)malloc(sizeof(char) * 0);
+                                tramaChecksumKo.length = 0;
+                                tramaChecksumKo.data = (char*)malloc(sizeof(char) * 0);
 
                                 //remove(path);// Eliminem la imatge perque no la hem rebut be
                                 free(path);
 
-                                int disconnected = sendTrama(tramaChecksumOk, fd);
-                                free(tramaChecksumOk.header);
-                                free(tramaChecksumOk.data);
+                                int disconnected = sendTrama(tramaChecksumKo, fd);
+                                free(tramaChecksumKo.header);
+                                free(tramaChecksumKo.data);
 
                                 if (disconnected){
                                     return 1;
