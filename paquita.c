@@ -97,7 +97,26 @@ void tractaImatge(MessageJPG messageJPG){
 void tractaText(MessageTXT messageTXT){
     lastTxtInfo = initLastText();
 
-    printf("File length: %d \n", messageTXT.length);
+    int length = strlen("files/") + messageTXT.length;
+    //char* pathArxiu = (char*)malloc(length * sizeof(char));
+    char* pathArxiu = strdup("files/");
+    //pathArxiu = strcat(pathArxiu, pathAcumulat);
+    pathArxiu = (char*)realloc(pathArxiu, (length + 1) * sizeof(char));
+    pathArxiu = strcat(pathArxiu, messageTXT.filename);
+    pathArxiu[length] = '\0';
+
+    int fdArxiuConstelacions = open(pathArxiu, O_RDONLY);
+    if (fdArxiuConstelacions < 0){
+        printf("[PAQUITA] - No s'ha pogut obrir l'arxiu!\n");
+    }else{
+        int final = 0;
+        while (final != 1){
+            Constelacio constelacio;
+            final = llegirConstelacio(fdArxiuConstelacions, &constelacio);
+            // todo: lolo tractar constelacio
+        }
+    }
+
 }
 
 LastTxtInfo initLastText(){
@@ -112,10 +131,20 @@ LastTxtInfo initLastText(){
     return last;
 }
 
+int llegirConstelacio(int fd, Constelacio* novaConstelacio){
+
+    // leer una linia del arxivo,
+    // 1 final
+    // 0 no final
+
+    return 0;
+}
+
 // Mitjanes
 void actualitzaMitjanaConstelacions(LastTxtInfo last){
     paquitaTXTinfo.mitjanaConstelacionsPerArxiu = paquitaTXTinfo.mitjanaConstelacionsPerArxiu * paquitaTXTinfo.numTotalTxt;
     paquitaTXTinfo.numTotalTxt++;
+    paquitaTXTinfo.mitjanaConstelacionsPerArxiu += last.numConstelacions;
     paquitaTXTinfo.mitjanaConstelacionsPerArxiu = paquitaTXTinfo.mitjanaConstelacionsPerArxiu / paquitaTXTinfo.numTotalTxt;
 }
 

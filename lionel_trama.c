@@ -329,8 +329,8 @@ int tractaTrama(Trama received, int fd){
                                 return 1;
                             }
 
-                            addNewTxt(txt);
                             mostraMissatgeFileReceived(txt.name);
+                            addNewTxt(txt);
 
                             free(pathTxt);
                             return 5;
@@ -537,7 +537,7 @@ Txt getTextInfo(Trama received){
     for (int k = 0; k < nameLength - 1; k++) {
         txt.name[k] = received.data[i+k];
     }
-    txt.name[nameLength] = '\0';
+    txt.name[nameLength - 1] = '\0';
 
     return txt;
 }
