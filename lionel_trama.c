@@ -241,7 +241,7 @@ int tractaTrama(Trama received, int fd){
                                 }
 
                                 addNewImage(image);
-                                mostraMissatgeFileReceived(image.name);
+                                //mostraMissatgeFileReceived(image.name);
 
                                 free(path);
                                 free(myChecksum);
@@ -562,6 +562,15 @@ void addNewImage(Image newImage){
         printf("Imatge: %s \n", imagesList.images[i].name);
     }
 
+    // Enviem la info de la imatge JPG a paquita
+    MessageJPG messageJPG;
+    messageJPG.type = JPG_TYPE;
+    messageJPG.size = newImage.size;
+    printf("Size: %d \n", messageJPG.size);
+    if (msgsnd(queueId, &messageJPG, sizeof(messageJPG) - sizeof(long), 0) < 0){
+        printf("Error al comunicar-me amb Paquita!\n");
+    }
+
     // Desbloquejem el semafor
     pthread_mutex_unlock(&mutexLlistaImatges);
 
@@ -588,6 +597,18 @@ void addNewTxt(Txt newTxt){
     printf("Tenim %d txt guardats \n", numTxts);
     for (int i = 0; i < numTxts; i++) {
         printf("Txt: %s \n", txtList.txts[i].name);
+    }
+
+    // Enviem la info de la imatge JPG a paquita
+    MessageTXT messageTXT;
+    messageTXT.type = TXT_TYPE;
+    messageTXT.length = strlen(txtList.txts[index].name);
+    for (int i = 0; i < messageTXT.length; i++) {
+        messageTXT.filename[i] = txtList.txts[index].name[i];
+    }
+    messageTXT.filename[messageTXT.length] = '\0';
+    if (msgsnd(queueId, &messageTXT, sizeof(messageTXT) - sizeof(long), 0) < 0){
+        printf("Error al comunicar-me amb Paquita!\n");
     }
 
     // Desbloquejem el semafor

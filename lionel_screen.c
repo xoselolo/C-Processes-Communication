@@ -81,3 +81,11 @@ void mostraMissatgeFileReceived(char* filename){
     write(FD_OUT, filename, strlen(filename) * sizeof(char));
     write(FD_OUT, " received. \n", strlen(" received. \n") * sizeof(char));
 }
+
+void mostraErrorArrencarPaquita(){
+    write(FD_OUT, "Error al arrencar el proces Paquita\n", strlen("Error al arrencar el proces Paquita\n") * sizeof(char));
+}
+
+void mostraErrorCreacioQueue(){
+    write(FD_OUT, "Error al crear la cua de missatges\n", strlen("Error al crear la cua de missatges\n") * sizeof(char));
+}

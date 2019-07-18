@@ -9,6 +9,10 @@
  * BACKLOG defineix el nombre maxim de peticions en espera
  */
 #define BACKLOG 10
+#define BUSTIA_JPG 0
+#define JPG_TYPE 20 // Porque si
+#define BUSTIA_TXT 1
+#define TXT_TYPE 40 // Porque si
 
 #include <fcntl.h>
 #include <sys/types.h>
@@ -20,6 +24,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <sys/msg.h>
+#include <signal.h>
 
 //      CONNECTION
 //          --- TYPE ---
@@ -114,14 +120,65 @@ typedef struct{
     Txt* txts;
 }TxtList;
 
+typedef struct{
+    long type;
+    int size;
+}MessageJPG;
+
+typedef struct{
+    long type;
+    int length;
+    char filename[100];
+}MessageTXT;
+
+typedef struct{
+    long type;
+    pthread_t thread;
+}PaquitaReader;
+
+typedef struct{
+    int numReaders;
+    PaquitaReader* readers;
+}PaquitaReadersList;
+
+typedef struct{
+    int numTotalImatges; // init a 0
+    float totalKB; // init a 0
+}PaquitaJPGinfo;
+
+typedef struct{
+    char codi[3];
+    float densitat;
+    float magnitud;
+}Constelacio;
+
+typedef struct{
+    Constelacio* constelacions; // init a NULL
+    int numConstelacions; // init a 0
+    float mitjanaDensitats; // init a 1 -->  0 * 0
+    float magnitudMAX; // init a 0 (pos [0] sera la 1ª a la forsa)
+    float magnitudMIN; // init a 0 (pos [0] sera la 1ª a la forsa)
+}LastTxtInfo;
+
+typedef struct{
+    int numTotalTxt; // init a 0
+    float mitjanaConstelacionsPerArxiu; // init a 1 -->  0 * 0
+}PaquitaTXTinfo;
 
 // Variables globals
 Configuracio configuracio;
 struct sockaddr_in socketConfig;
 McGrudersList mcGrudersList;
+int pidPaquita;
+int queueId;
+PaquitaReadersList readersList;
 
 ImagesList imagesList;
 TxtList txtList;
+
+PaquitaJPGinfo paquitaJPGinfo;
+PaquitaTXTinfo paquitaTXTinfo;
+LastTxtInfo lastTxtInfo;
 
 
 #endif //MCGRUDER_LIONEL_TYPES_H

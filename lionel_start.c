@@ -93,3 +93,14 @@ void configureKills(){
     signal(SIGINT, desconnecta);
     signal(SIGTERM, desconnecta);
 }
+
+int createMessageQueue(char* pathConfig){
+    key_t ftokValue = ftok(pathConfig, 0);
+    queueId = msgget(ftokValue, 0600 | IPC_CREAT);
+    if (queueId < 0){
+        return 1;
+    }
+    printf("Cua creada!\n");
+    printf("Id de la cua (LIONEL) = %d \n", queueId);
+    return 0;
+}

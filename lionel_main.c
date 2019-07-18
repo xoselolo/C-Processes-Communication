@@ -5,6 +5,7 @@
 // Llibreries
 #include "lionel_start.h"
 #include "lionel_program.h"
+#include "paquita.h"
 
 // Constants
 #define EXIT_CODE_START         1
@@ -36,9 +37,29 @@ int main(int argc, char** argv){
     }else{
         // configurem les senyals per a quan ens tanquen Lionel sobtadament
         configureKills();
+        // Creem la cua de missatges amb la que ens comunicarem amb paquita
+        int queueError = createMessageQueue(argv[1]);
+        if(queueError){
+            mostraErrorCreacioQueue();
+        }
 
-        // Acceptem mcgruders
-        acceptMcGruders();
+        pidPaquita = fork();
+        switch (pidPaquita){
+            case -1:
+                // Error
+                mostraErrorArrencarPaquita();
+                alliberaConfiguracio();
+                break;
+            case 0:
+                // Fill (paquita) -----------------
+                paquita();
+                break;
+            default:
+                // Lionel (main) ------------------
+                // Acceptem mcgruders
+                acceptMcGruders();
+                break;
+        }
     }
 
 

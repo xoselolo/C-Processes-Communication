@@ -23,7 +23,7 @@ checksum.o: checksum.c checksum.h
 McGruder: mcgruder_main.o mcgruder_start.o mcgruder_program.o mcgruder_scanner.o mcgruder_configReader.o mcgruder_connection.o mcgruder_screen.o mcgruder_memory.o mcgruder_trama.o checksum.o
 	gcc mcgruder_main.o mcgruder_start.o mcgruder_program.o mcgruder_scanner.o mcgruder_configReader.o mcgruder_connection.o mcgruder_screen.o mcgruder_memory.o mcgruder_trama.o checksum.o -o McGruder -Wall -Wextra
 
-lionel_main.o: lionel_main.c lionel_start.h lionel_program.h
+lionel_main.o: lionel_main.c lionel_start.h lionel_program.h paquita.h
 	gcc -c lionel_main.c -lpthread -Wall -Wextra
 lionel_start.o: lionel_start.c lionel_start.h lionel_configReader.h lionel_connection.h
 	gcc -c lionel_start.c -lpthread -Wall -Wextra
@@ -37,10 +37,12 @@ lionel_memory.o: lionel_memory.c lionel_memory.h lionel_types.h
 	gcc -c lionel_memory.c -lpthread -Wall -Wextra
 lionel_trama.o: lionel_trama.c lionel_types.h lionel_types.h lionel_screen.h checksum.h
 	gcc -c lionel_trama.c -lpthread -Wall -Wextra
+paquita.o: paquita.c paquita.h lionel_types.h
+	gcc -c paquita.c -lpthread -Wall -Wextra
 lionel_screen.o: lionel_screen.c lionel_screen.h lionel_types.h
 	gcc -c lionel_screen.c -lpthread -Wall -Wextra
-Lionel: lionel_main.o lionel_start.o lionel_program.o lionel_connection.o lionel_configReader.o lionel_memory.o lionel_trama.o lionel_screen.o checksum.o
-	gcc lionel_main.o lionel_start.o lionel_program.o lionel_connection.o lionel_configReader.o lionel_memory.o lionel_trama.o lionel_screen.o checksum.o -o Lionel -lpthread -Wall -Wextra
+Lionel: lionel_main.o lionel_start.o lionel_program.o lionel_connection.o lionel_configReader.o lionel_memory.o lionel_trama.o paquita.o lionel_screen.o checksum.o
+	gcc lionel_main.o lionel_start.o lionel_program.o lionel_connection.o lionel_configReader.o lionel_memory.o lionel_trama.o paquita.o lionel_screen.o checksum.o -o Lionel -lpthread -Wall -Wextra
 
 clean:
 	rm *.o McGruder.exe

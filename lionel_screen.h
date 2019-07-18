@@ -37,5 +37,7 @@ void mostraErrorConnexioSocket();
 void mostraErrorRebreArxiu(char* filename);
 void mostraMissatgeReceivingData(char* mcgruderName);
 void mostraMissatgeFileReceived(char* filename);
+void mostraErrorArrencarPaquita();
+void mostraErrorCreacioQueue();
 
 #endif //MCGRUDER_LIONEL_SCREEN_H

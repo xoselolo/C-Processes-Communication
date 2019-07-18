@@ -49,5 +49,11 @@ void configureInitialFiles();
  */
 void configureKills();
 
+/**
+ * Crea la cua de missatges que utilitzarem a Paquita
+ * @return 1 error, 0 OK
+ */
+int createMessageQueue(char* pathConfig);
+
 
 #endif //MCGRUDER_LIONEL_START_H

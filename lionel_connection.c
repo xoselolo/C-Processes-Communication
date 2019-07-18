@@ -23,6 +23,9 @@ void desconnecta(){
     // Tanquem el socket
     close(configuracio.fdSocket);
 
+    // Tanquem la cua de missatges amb Paquita
+    msgctl(queueId, IPC_RMID, NULL);
+
     // Mostrem el missatge de que ens desconnectem
     mostraMissatgeDisconnecting();
 
