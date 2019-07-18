@@ -22,7 +22,7 @@ void tractaImatge(MessageJPG messageJPG);
 void tractaText(MessageTXT messageTXT);
 LastTxtInfo initLastText();
 int llegirConstelacio(int fd, Constelacio* novaConstelacio);
-void actualitzaMitjanaConstelacions(LastTxtInfo last);
+void actualitzaMitjanaConstelacions();
 void actualitzaLast(Constelacio novaConstelacio);
 
 #endif //MCGRUDER_PAQUITA_H

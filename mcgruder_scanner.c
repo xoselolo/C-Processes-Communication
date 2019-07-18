@@ -422,15 +422,29 @@ int sendTxt(struct dirent* ent){
     // construim el path del fitxer
     char* name = strdup(ent->d_name);
     int length = strlen(pathAcumulat) + strlen(name);
+    printf("EL length es ............... %d \n", length);
     //char* pathArxiu = (char*)malloc(length * sizeof(char));
     char* pathArxiu = strdup(pathAcumulat);
     //pathArxiu = strcat(pathArxiu, pathAcumulat);
     pathArxiu = (char*)realloc(pathArxiu, (length + 1) * sizeof(char));
+    //pathArxiu = (char*)malloc((length + 1) * sizeof(char));
     pathArxiu = strcat(pathArxiu, name);
     pathArxiu[length] = '\0';
     write(1, "PATH ARXIU: ", 12);
-    write(1, pathArxiu, length);
+    write(1, pathArxiu, length * sizeof(char));
     write(1, "\n", 1);
+
+
+    /*
+     *              char* name = strdup(ent->d_name);
+                    int length = strlen(pathAcumulat) + strlen(name);
+                    //char* pathArxiu = (char*)malloc(length * sizeof(char));
+                    char* pathArxiu = strdup(pathAcumulat);
+                    //pathArxiu = strcat(pathArxiu, pathAcumulat);
+                    pathArxiu = (char*)realloc(pathArxiu, (length + 1) * sizeof(char));
+                    pathArxiu = strcat(pathArxiu, name);
+                    pathArxiu[length] = '\0';
+     */
 
     int size = getSizeArxiu(pathArxiu);
     if (size < 0){
@@ -471,7 +485,7 @@ int sendTxt(struct dirent* ent){
         printf("Error en apertura\n");
         return 4;
     } else{
-        // Podem enviar el contingut del fitxer --> todo
+        // Podem enviar el contingut del fitxer
         free(imageTrama.data);
 
         imageTrama.type = TYPE_SENDFILE;

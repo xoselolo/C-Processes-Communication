@@ -88,9 +88,9 @@ void tractaImatge(MessageJPG messageJPG){
     paquitaJPGinfo.numTotalImatges++;
     paquitaJPGinfo.totalKB += ((float) messageJPG.size) / 1024;
 
-    printf("Nova info de JPG: \n");
-    printf("\t Num total imatges: %d \n", paquitaJPGinfo.numTotalImatges);
-    printf("\t Num total KB: %.2f \n", paquitaJPGinfo.totalKB);
+    //printf("Nova info de JPG: \n");
+    //printf("\t Num total imatges: %d \n", paquitaJPGinfo.numTotalImatges);
+    //printf("\t Num total KB: %.2f \n", paquitaJPGinfo.totalKB);
 }
 
 // Funcio dels texts
@@ -107,16 +107,26 @@ void tractaText(MessageTXT messageTXT){
 
     int fdArxiuConstelacions = open(pathArxiu, O_RDONLY);
     if (fdArxiuConstelacions < 0){
-        printf("[PAQUITA] - No s'ha pogut obrir l'arxiu!\n");
+        write(1, "No s'ha pogut obrir l'arxiu a Paquita per a realitzar els calculs!\n",
+                strlen("No s'ha pogut obrir l'arxiu a Paquita per a realitzar els calculs!\n") * sizeof(char));
     }else{
         int final = 0;
         while (final != 1){
             Constelacio constelacio;
             final = llegirConstelacio(fdArxiuConstelacions, &constelacio);
-            // todo: lolo tractar constelacio
+            printf("Nova constelacio:\n");
+            printf("\t Codi: %s \n", constelacio.codi);
+            printf("\t Densitat: %f \n", constelacio.densitat);
+            printf("\t Magnitud: %f \n", constelacio.magnitud);
+            actualitzaLast(constelacio);
         }
+        // hem acabat de llegir
+        actualitzaMitjanaConstelacions();
+        close(fdArxiuConstelacions);
+        printf("Stats: \n");
+        printf("\tMitjana de constelacions per fitxer: %f \n", paquitaTXTinfo.mitjanaConstelacionsPerArxiu);
+        printf("\tNum total de fitxers: %d \n", paquitaTXTinfo.numTotalTxt);
     }
-
 }
 
 LastTxtInfo initLastText(){
@@ -132,20 +142,74 @@ LastTxtInfo initLastText(){
 }
 
 int llegirConstelacio(int fd, Constelacio* novaConstelacio){
+    char codi[3];
+    for(int i = 0; i < 3; i++){
+        read(fd, &codi[i], sizeof(char));
+    }
 
-    // leer una linia del arxivo,
-    // 1 final
-    // 0 no final
+    char  aux = 'X';
+    read(fd, &aux, sizeof(char)); // llegim espai en blanc
 
-    return 0;
+    char* num = (char*)malloc(0 * sizeof(char));
+    int i = 0;
+    while (1){
+        read(fd, &aux, sizeof(char));
+        if (aux == ' '){
+            num = (char*)realloc(num, (i+1) * sizeof(char));
+            num[i] = '\0';
+            break;
+        }else{
+            num = (char*)realloc(num, (i+1) * sizeof(char));
+            num[i] = aux;
+            i++;
+        }
+    }
+
+    float densitat = (float) atof(num);
+
+    free(num);
+    num = (char*)malloc(0 * sizeof(char));
+    i = 0;
+    aux = 'X';
+    int bytes = 0;
+    int endOfFile = 0;
+    while (1){
+        bytes = read(fd, &aux, sizeof(char));
+        if (aux == ' ' || aux == '\n' || bytes <= 0){
+            if (bytes <= 0){
+                endOfFile = 1;
+            }
+            num = (char*)realloc(num, (i+1) * sizeof(char));
+            num[i] = '\0';
+            break;
+        }else{
+            num = (char*)realloc(num, (i+1) * sizeof(char));
+            num[i] = aux;
+            i++;
+        }
+    }
+
+    float magnitud = (float) atof(num);
+
+    // Alliberem memoria
+    free(num);
+
+
+    for(int k = 0; k < 3; k++){
+        novaConstelacio->codi[k] = codi[k];
+    }
+    novaConstelacio->densitat = densitat;
+    novaConstelacio->magnitud = magnitud;
+
+    return endOfFile;
 }
 
 // Mitjanes
-void actualitzaMitjanaConstelacions(LastTxtInfo last){
+void actualitzaMitjanaConstelacions(){
     paquitaTXTinfo.mitjanaConstelacionsPerArxiu = paquitaTXTinfo.mitjanaConstelacionsPerArxiu * paquitaTXTinfo.numTotalTxt;
     paquitaTXTinfo.numTotalTxt++;
-    paquitaTXTinfo.mitjanaConstelacionsPerArxiu += last.numConstelacions;
-    paquitaTXTinfo.mitjanaConstelacionsPerArxiu = paquitaTXTinfo.mitjanaConstelacionsPerArxiu / paquitaTXTinfo.numTotalTxt;
+    paquitaTXTinfo.mitjanaConstelacionsPerArxiu += lastTxtInfo.numConstelacions;
+    paquitaTXTinfo.mitjanaConstelacionsPerArxiu = paquitaTXTinfo.mitjanaConstelacionsPerArxiu / ((float)paquitaTXTinfo.numTotalTxt);
 }
 
 void actualitzaLast(Constelacio novaConstelacio){
@@ -164,7 +228,7 @@ void actualitzaLast(Constelacio novaConstelacio){
     lastTxtInfo.mitjanaDensitats = lastTxtInfo.mitjanaDensitats * lastTxtInfo.numConstelacions;
     lastTxtInfo.mitjanaDensitats = lastTxtInfo.mitjanaDensitats + novaConstelacio.densitat;
     lastTxtInfo.numConstelacions++;
-    lastTxtInfo.mitjanaDensitats = lastTxtInfo.mitjanaDensitats / lastTxtInfo.numConstelacions;
+    lastTxtInfo.mitjanaDensitats = lastTxtInfo.mitjanaDensitats / ((float)lastTxtInfo.numConstelacions);
 
     int numConst = lastTxtInfo.numConstelacions;
     if (numConst == 1){
