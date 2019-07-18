@@ -126,7 +126,7 @@ int tractaTrama(Trama received, int fd){
                 int tipus = extensioMetadata(received.data);
                 Image image;
                 Txt txt;
-                char* mcgrduerName;
+                char* mcgruderName;
                 if (tipus != 0){
                     switch (tipus){
                         case 1:
@@ -134,12 +134,13 @@ int tractaTrama(Trama received, int fd){
                             image = getImageInfo(received);
 
                             // Mostrem missatge rebent informacio del mcgruder
-                            mcgrduerName = getMcGruderName(fd);
-                            if (mcgrduerName == NULL){
+                            mcgruderName = getMcGruderName(fd);
+                            if (mcgruderName == NULL){
                                 mostraErrorRebreArxiu(image.name);
                                 return 7;
                             }
-                            mostraMissatgeReceivingData(mcgrduerName);
+
+                            mostraMissatgeReceivingData(mcgruderName);
 
                             int length = strlen(image.name) + 6;
                             char* path = strdup("files/\0");
@@ -168,6 +169,7 @@ int tractaTrama(Trama received, int fd){
                                         remove(path);
                                         //free(fileContent);
                                         mostraErrorRebreArxiu(image.name);
+                                        received.data[strlen(received.data) - 1] = '\0';
                                         mostraMissatgeDisconnectingMcGruder(received.data);
                                         if (strcmp(received.header, HEADER_DISCONNECTION) == 0){
                                             free(received.header);
@@ -240,8 +242,9 @@ int tractaTrama(Trama received, int fd){
                                     return 1; // Mc gruder desconnectat
                                 }
 
+                                mostraMissatgeFileReceived(image.name);
+
                                 addNewImage(image);
-                                //mostraMissatgeFileReceived(image.name);
 
                                 free(path);
                                 free(myChecksum);
@@ -250,21 +253,21 @@ int tractaTrama(Trama received, int fd){
                                 // Checksum error
                                 mostraErrorRebreArxiu(image.name);
 
-                                Trama tramaChecksumOk;
-                                tramaChecksumOk.type = TYPE_SENDFILE;
+                                Trama tramaChecksumKo;
+                                tramaChecksumKo.type = TYPE_SENDFILE;
                                 int length = strlen(HEADER_SENDFILE_RESPONSE_KO_IMAGE);
-                                tramaChecksumOk.header = (char*)malloc(length * sizeof(char));
-                                tramaChecksumOk.header = strcpy(tramaChecksumOk.header, HEADER_SENDFILE_RESPONSE_KO_IMAGE);
+                                tramaChecksumKo.header = (char*)malloc(length * sizeof(char));
+                                tramaChecksumKo.header = strcpy(tramaChecksumKo.header, HEADER_SENDFILE_RESPONSE_KO_IMAGE);
 
-                                tramaChecksumOk.length = 0;
-                                tramaChecksumOk.data = (char*)malloc(sizeof(char) * 0);
+                                tramaChecksumKo.length = 0;
+                                tramaChecksumKo.data = (char*)malloc(sizeof(char) * 0);
 
                                 //remove(path);// Eliminem la imatge perque no la hem rebut be
                                 free(path);
 
-                                int disconnected = sendTrama(tramaChecksumOk, fd);
-                                free(tramaChecksumOk.header);
-                                free(tramaChecksumOk.data);
+                                int disconnected = sendTrama(tramaChecksumKo, fd);
+                                free(tramaChecksumKo.header);
+                                free(tramaChecksumKo.data);
 
                                 if (disconnected){
                                     return 1;
@@ -279,12 +282,12 @@ int tractaTrama(Trama received, int fd){
                             txt = getTextInfo(received);
 
                             // Mostrem missatge rebent informacio del mcgruder
-                            mcgrduerName = getMcGruderName(fd);
-                            if (mcgrduerName == NULL){
+                            mcgruderName = getMcGruderName(fd);
+                            if (mcgruderName == NULL){
                                 mostraErrorRebreArxiu(txt.name);
                                 return 7;
                             }
-                            mostraMissatgeReceivingData(mcgrduerName);
+                            mostraMissatgeReceivingData(mcgruderName);
 
                             int lengthTxt = strlen(txt.name) + 6;
                             char* pathTxt = strdup("files/\0");
@@ -342,11 +345,12 @@ int tractaTrama(Trama received, int fd){
             }
             return 0;
         case TYPE_DISCONNECTION:
+            received.data[strlen(received.data) - 1] = '\0';
             mostraMissatgeDisconnectingMcGruder(received.data);
             if (strcmp(received.header, HEADER_DISCONNECTION) == 0){
                 free(received.header);
                 received.header = (char*)malloc(sizeof(char) * strlen(HEADER_DISCONNECTION_RESPONSE_OK));
-                strcpy(received.header, HEADER_DISCONNECTION_RESPONSE_OK);
+                received.header = strcpy(received.header, HEADER_DISCONNECTION_RESPONSE_OK);
 
                 received.length = 0;
                 free(received.data);
@@ -456,7 +460,7 @@ Image getImageInfo(Trama received){
     for (int k = 0; k < nameLength - 1; k++) {
         image.name[k] = received.data[i+k];
     }
-    image.name[nameLength] = '\0';
+    image.name[nameLength - 1] = '\0';
 
     return image;
 }
@@ -632,8 +636,9 @@ char* getMcGruderName(int fd){
     if (index == -1){
         mcgruderName = NULL;
     }else{
-        mcgruderName = (char*)malloc(sizeof(char) * strlen(mcGrudersList.mcgruders[index].telescopeName));
+        mcgruderName = (char*)malloc(sizeof(char) * strlen(mcGrudersList.mcgruders[index].telescopeName) + 1);
         mcgruderName = strcpy(mcgruderName, mcGrudersList.mcgruders[index].telescopeName);
+        mcgruderName[strlen(mcgruderName) - 1] = '\0';
     }
 
     // Desbloquejem el semafor

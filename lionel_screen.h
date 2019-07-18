@@ -21,6 +21,9 @@
 #define MSSG_ERROR_NEW_MCGRUDER_CONNECTION "Error, no s'ha pogut connectar un nou McGruder!\n"
 #define MSSG_DISCONNECTING "\nDisconnecting Lionel..\n"
 #define MSSG_ERROR_SOCKET "Error, no s'ha pogut acceptar una nova connexio!\n"
+#define MSSG_RECEIVING_DATA "Receiving data from "
+#define MSSG_END " ... \n"
+#define MSSG_DISCONNECTING_MCGRUDER "Disconnecting from "
 
 // Capcaleres de funcions
 void mostraErrorNumeroArguments();

@@ -23,10 +23,10 @@ int main(int argc, char** argv){
     configuracio = readConfiguracio(fdConfig);
     if (configuracio.tempsF3 == -1){
         // Error en arxiu de configuració
-        close(fdConfig); // Tanquem el socket perque no s'ha pogutt llegir correctament
+        close(fdConfig); // Tanquem el file descriptor de l'arxiu de configuració del lionel perque no s'ha pogutt llegir correctament
         return EXIT_CODE_CONFIG;
     }
-    // Tanquem el socket perque ja hem llegit l'arxiu
+    // Tanquem el file descriptor de l'arxiu de configuració del lionel perque ja l'hem llegit
     close(fdConfig);
 
     mostraMissatgeStarting();

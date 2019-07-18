@@ -46,14 +46,9 @@ void mostraMissatgeDisconnecting(){
 }
 
 void mostraMissatgeDisconnectingMcGruder(char* telescopeName){
-    char buffer[100];
-    int bytes = sprintf(buffer, "Disconnecting from %s \n", telescopeName);
-    write(FD_OUT, buffer, bytes);
-
-    //write(FD_OUT, "Disconnecting from ", strlen("Disconnecting from ") * sizeof(char));
-    //write(FD_OUT, telescopeName, strlen(telescopeName) * sizeof(char));
-    //write(FD_OUT, ".\n", strlen(".\n") * sizeof(char));
-    //write(FD_OUT, ".", sizeof(char));
+    write(FD_OUT, MSSG_DISCONNECTING_MCGRUDER, strlen(MSSG_DISCONNECTING_MCGRUDER) * sizeof(char));
+    write(FD_OUT, telescopeName, strlen(telescopeName) * sizeof(char));
+    write(FD_OUT, MSSG_END, strlen(MSSG_END) * sizeof(char));
 }
 
 void mostraErrorNewMcgruder(){
@@ -71,9 +66,9 @@ void mostraErrorRebreArxiu(char* filename){
 }
 
 void mostraMissatgeReceivingData(char* mcgruderName){
-    write(FD_OUT, "Receiving data from ", strlen("Receiving data from ") * sizeof(char));
+    write(FD_OUT, MSSG_RECEIVING_DATA, strlen(MSSG_RECEIVING_DATA) * sizeof(char));
     write(FD_OUT, mcgruderName, strlen(mcgruderName) * sizeof(char));
-    write(FD_OUT, " ... \n", strlen(" ... \n") * sizeof(char));
+    write(FD_OUT, MSSG_END, strlen(MSSG_END) * sizeof(char));
 }
 
 void mostraMissatgeFileReceived(char* filename){
