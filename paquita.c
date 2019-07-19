@@ -88,9 +88,9 @@ void tractaImatge(MessageJPG messageJPG){
     paquitaJPGinfo.numTotalImatges++;
     paquitaJPGinfo.totalKB += ((float) messageJPG.size) / 1024;
 
-    //printf("Nova info de JPG: \n");
-    //printf("\t Num total imatges: %d \n", paquitaJPGinfo.numTotalImatges);
-    //printf("\t Num total KB: %.2f \n", paquitaJPGinfo.totalKB);
+    printf("Nova info de JPG: \n");
+    printf("\t Num total imatges: %d \n", paquitaJPGinfo.numTotalImatges);
+    printf("\t Num total KB: %.2f \n", paquitaJPGinfo.totalKB);
 }
 
 // Funcio dels texts
