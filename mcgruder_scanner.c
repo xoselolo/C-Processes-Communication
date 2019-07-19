@@ -258,13 +258,24 @@ char* formaDataMetadata(char tipus[4], int size, char* dataHoraString, char* fil
 
 int sendImage(struct dirent* ent){
     // construim el path del fitxer
-    char* name = strdup(ent->d_name);
-    int length = strlen(pathAcumulat) + strlen(name);
+    //char* name = strdup(ent->d_name);
+    int length = strlen("files/") + strlen(ent->d_name);
+    printf("EL length es ............... %d \n", length);
     //char* pathArxiu = (char*)malloc(length * sizeof(char));
-    char* pathArxiu = strdup(pathAcumulat);
+    //char* pathArxiu = strdup(pathAcumulat);
     //pathArxiu = strcat(pathArxiu, pathAcumulat);
-    pathArxiu = (char*)realloc(pathArxiu, (length + 1) * sizeof(char));
-    pathArxiu = strcat(pathArxiu, name);
+    char pathArxiu[length + 1];
+    strncpy(pathArxiu, "files/", length);
+
+    int i = 0, j = 0;
+    for (i = 6; i < length + 1; i++) {
+        pathArxiu[i] = ent->d_name[j++];
+    }
+    //pathArxiu = (char*)malloc((length + 1) * sizeof(char));
+    //pathArxiu = strcat(pathArxiu, "files/\0");
+    //printf("Path arxiu 1 %s\n", pathArxiu);
+    //pathArxiu = strcat(pathArxiu, ent->d_name);
+    printf("Path arxiu 2 %s\n", pathArxiu);
     pathArxiu[length] = '\0';
     write(1, "PATH ARXIU: ", 12);
     write(1, pathArxiu, length);
@@ -305,7 +316,7 @@ int sendImage(struct dirent* ent){
     int fdArxiu = open(pathArxiu, O_RDONLY);
 
     if (fdArxiu < 0){
-        free(pathArxiu);
+        //free(pathArxiu);
         printf("Error en apertura\n");
         return 4;
     } else{
@@ -366,7 +377,7 @@ int sendImage(struct dirent* ent){
         char* checksum = makeChecksum(pathArxiu);
         printf("CHECKSUM: -%s- \n", checksum);
 
-        free(pathArxiu);
+        //free(pathArxiu);
 
 
         Trama checksumTrama;
@@ -420,15 +431,24 @@ int sendImage(struct dirent* ent){
 
 int sendTxt(struct dirent* ent){
     // construim el path del fitxer
-    char* name = strdup(ent->d_name);
-    int length = strlen(pathAcumulat) + strlen(name);
+    //char* name = strdup(ent->d_name);
+    int length = strlen("files/") + strlen(ent->d_name);
     printf("EL length es ............... %d \n", length);
     //char* pathArxiu = (char*)malloc(length * sizeof(char));
-    char* pathArxiu = strdup(pathAcumulat);
+    //char* pathArxiu = strdup(pathAcumulat);
     //pathArxiu = strcat(pathArxiu, pathAcumulat);
-    pathArxiu = (char*)realloc(pathArxiu, (length + 1) * sizeof(char));
+    char pathArxiu[length + 1];
+    strncpy(pathArxiu, "files/", length);
+
+    int i = 0, j = 0;
+    for (i = 6; i < length + 1; i++) {
+        pathArxiu[i] = ent->d_name[j++];
+    }
     //pathArxiu = (char*)malloc((length + 1) * sizeof(char));
-    pathArxiu = strcat(pathArxiu, name);
+    //pathArxiu = strcat(pathArxiu, "files/\0");
+    //printf("Path arxiu 1 %s\n", pathArxiu);
+    //pathArxiu = strcat(pathArxiu, ent->d_name);
+    printf("Path arxiu 2 %s\n", pathArxiu);
     pathArxiu[length] = '\0';
     write(1, "PATH ARXIU: ", 12);
     write(1, pathArxiu, length * sizeof(char));
@@ -481,7 +501,7 @@ int sendTxt(struct dirent* ent){
     int fdArxiu = open(pathArxiu, O_RDONLY);
 
     if (fdArxiu < 0){
-        free(pathArxiu);
+        //free(pathArxiu);
         printf("Error en apertura\n");
         return 4;
     } else{
