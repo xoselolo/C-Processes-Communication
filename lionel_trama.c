@@ -8,17 +8,8 @@ extern pthread_mutex_t mutexLlistaMcGruders;
 extern pthread_mutex_t mutexLlistaImatges;
 extern pthread_mutex_t mutexLlistaTxts;
 
-void mostraTrama(Trama connectionTrama){
-    printf("TRAMA\n");
-    printf("\tType: %#08x\n", connectionTrama.type);
-    printf("\tHeader: %s\n", connectionTrama.header);
-    printf("\tLength: %hu\n", connectionTrama.length);
-    printf("\tData: %s\n", connectionTrama.data);
-}
 
 int sendTrama(Trama trama, int fd){
-    //write(fdLionel, &trama, sizeof(trama));
-    //mostraTrama(trama);
 
     int disconnected = write(fd, &trama.type, 1);
     if (disconnected < 0){
@@ -89,7 +80,6 @@ Trama receiveTrama(int fd){
             }
             receivedTrama.data[nameLength] = '\0';
 
-            //mostraTrama(receivedTrama);
             return receivedTrama;
         }
 
@@ -150,7 +140,6 @@ int tractaTrama(Trama received, int fd){
 
                             int fdImatge = creat(path, 0777);
                             if (fdImatge < 0){
-                                printf("Error al intentar crear arxiu!\n");
                                 free(path);
                                 return 6;
                             }
@@ -181,10 +170,8 @@ int tractaTrama(Trama received, int fd){
                                             received.data = (char*)malloc(sizeof(char) * 0);
 
                                             int mcGruderDown = sendTrama(received, fd);
-                                            printf("HOLA1\n");
                                             free(received.header);
                                             free(received.data);
-                                            printf("HOLA2\n");
 
                                             if (mcGruderDown){
                                                 return 1;
@@ -193,7 +180,6 @@ int tractaTrama(Trama received, int fd){
                                             }
                                         }else{
                                             // Trama desconeguda --> no fem res :)
-                                            printf("Trama desconeguda per part del fd = %d\n", fd);
                                             return 3;
                                         }
                                     }else{
@@ -211,16 +197,14 @@ int tractaTrama(Trama received, int fd){
                             // comprovem el checksum
                             char* myChecksum = makeChecksum(path);
                             if (myChecksum == NULL){
-                                printf("NO FORK\n");
                                 mostraErrorRebreArxiu(image.name);
                                 return 6;
                             }
-                            printf("Lionel checksum -%s- \n", myChecksum);
+                            //printf("Lionel checksum -%s- \n", myChecksum);
 
                             // Comparem el checksum calculat (provisional) amb el rebut
                             if (strcmp(myChecksum, received.data) == 0){
                                 // Ambdos checksum coincideixen
-                                printf("Hem rebut be l'arxiu! \n");
 
                                 Trama tramaChecksumOk;
                                 tramaChecksumOk.type = TYPE_SENDFILE;
@@ -278,7 +262,6 @@ int tractaTrama(Trama received, int fd){
                             break;
                         case 2:
                             // Text TXT --------------------------------------------------------------------------------
-                            printf("Es un fitxer de text!\n");
                             txt = getTextInfo(received);
 
                             // Mostrem missatge rebent informacio del mcgruder
@@ -297,7 +280,6 @@ int tractaTrama(Trama received, int fd){
 
                             int fdTxt = creat(pathTxt, 0777);
                             if (fdTxt < 0){
-                                printf("Error al intentar crear arxiu!\n");
                                 free(pathTxt);
                                 return 6;
                             }
@@ -366,7 +348,6 @@ int tractaTrama(Trama received, int fd){
                 }
             }else{
                 // Trama desconeguda --> no fem res :)
-                printf("Trama desconeguda per part del fd = %d\n", fd);
                 return 3;
             }
     }
@@ -559,20 +540,12 @@ void addNewImage(Image newImage){
     imagesList.images[index].data = newImage.data;
     imagesList.images[index].hora = newImage.hora;
 
-    printf("Nova imatge desada!\n");
-    int numImatges = imagesList.numImages;
-    printf("Tenim %d imatges guardades \n", numImatges);
-    for (int i = 0; i < numImatges; i++) {
-        printf("Imatge: %s \n", imagesList.images[i].name);
-    }
-
     // Enviem la info de la imatge JPG a paquita
     MessageJPG messageJPG;
     messageJPG.type = JPG_TYPE;
     messageJPG.size = newImage.size;
-    printf("Size: %d \n", messageJPG.size);
     if (msgsnd(queueId, &messageJPG, sizeof(messageJPG) - sizeof(long), 0) < 0){
-        printf("Error al comunicar-me amb Paquita!\n");
+        write(1, "Error al comunicar-me amb Paquita!\n", strlen("Error al comunicar-me amb Paquita!\n") * sizeof(char));
     }
 
     // Desbloquejem el semafor
@@ -596,13 +569,6 @@ void addNewTxt(Txt newTxt){
     txtList.txts[index].data = newTxt.data;
     txtList.txts[index].hora = newTxt.hora;
 
-    printf("Nou txt desat!\n");
-    int numTxts = txtList.numTxt;
-    printf("Tenim %d txt guardats \n", numTxts);
-    for (int i = 0; i < numTxts; i++) {
-        printf("Txt: %s \n", txtList.txts[i].name);
-    }
-
     // Enviem la info de la imatge JPG a paquita
     MessageTXT messageTXT;
     messageTXT.type = TXT_TYPE;
@@ -612,7 +578,7 @@ void addNewTxt(Txt newTxt){
     }
     messageTXT.filename[messageTXT.length] = '\0';
     if (msgsnd(queueId, &messageTXT, sizeof(messageTXT) - sizeof(long), 0) < 0){
-        printf("Error al comunicar-me amb Paquita!\n");
+        write(1, "Error al comunicar-me amb Paquita!\n", strlen("Error al comunicar-me amb Paquita!\n") * sizeof(char));
     }
 
     // Desbloquejem el semafor

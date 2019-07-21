@@ -14,6 +14,9 @@ void desconnecta(){
     // Destruim el semafor dels mcgruders
     pthread_mutex_destroy(&mutexLlistaMcGruders);
 
+    // Matem a punyetasus a paquita
+    kill(pidPaquita, 9);
+
     // Extreiem les imatges i els txts als arxius kalkun i els alliberem la memoria
     kalkun();
 
@@ -39,7 +42,6 @@ void killMcGruders(){
 
     // Matem tots els threads
     for (int i = mcGrudersList.numMcGrudersConnected - 1; i >= 0; i--) {
-        printf("\nMatant al thread %d \n", i);
 
         // Aturem el thread, no importa que estava fent
         pthread_cancel(mcGrudersList.mcgruders[i].thread);
@@ -57,6 +59,7 @@ void killMcGruders(){
         close(mcGrudersList.mcgruders[i].fdMcgruder);
 
         // Mostrem missatge de desconnexio del mcgruder
+        mcGrudersList.mcgruders[i].telescopeName[strlen(mcGrudersList.mcgruders[i].telescopeName) - 1] = '\0';
         mostraMissatgeDisconnectingMcGruder(mcGrudersList.mcgruders[i].telescopeName);
 
         deleteMcGruder(mcGrudersList.mcgruders[i].fdMcgruder, i);
@@ -69,7 +72,7 @@ void killMcGruders(){
 void kalkun(){
     int fdJPG = open("KalkunJPG.txt",O_WRONLY | O_CREAT | O_APPEND, 0644);
     if (fdJPG < 0){
-        printf("No s'han pogut escriure les JPG\n");
+        write(1, "No s'han pogut escriure l'arxiu KalkunJPG.txt\n", strlen("No s'han pogut escriure l'arxiu KalkunJPG.txt\n") * sizeof(char));
     }else{
         // NOTA: Sempre escriurem \n al final de cada linia
 
@@ -90,7 +93,7 @@ void kalkun(){
 
     int fdTXT = open("KalkunTXT.txt",O_WRONLY | O_CREAT | O_APPEND, 0644);
     if (fdTXT < 0){
-        printf("No s'han pogut escriure els TXT\n");
+        write(1, "No s'han pogut escriure l'arxiu KalkunTXT.txt\n", strlen("No s'han pogut escriure l'arxiu KalkunTXT.txt\n") * sizeof(char));
     }else{
         // NOTA: Sempre escriurem \n al final de cada linia
 
@@ -138,7 +141,6 @@ void creaNouMcGruder(int fdNewMcgruder){
     int error = 0;
 
     if (connectionTrama.length < 0){
-        printf("ERRRR 1\n");
         mostraErrorNewMcgruder();
     }else{
         if (connectionTrama.type == TYPE_CONNECTION && strcmp(connectionTrama.header, HEADER_CONNECTION) == 0){
@@ -158,7 +160,6 @@ void creaNouMcGruder(int fdNewMcgruder){
             connectionTrama.data = (char*)malloc(sizeof(char) * 0);
             int mcgruderDown = sendTrama(connectionTrama, fdNewMcgruder);
             if (mcgruderDown){
-                printf("ERRRR 2\n");
                 free(telescopeName);
                 mostraErrorNewMcgruder();
             }else{
@@ -175,7 +176,6 @@ void creaNouMcGruder(int fdNewMcgruder){
                 int s = pthread_create(&newMcGruder.thread, NULL, mcGruderFunc, &fdNewMcGruderCopy);
                 if (s != 0){
                     error++;
-                    printf("ERRRR 3\n");
                 }else{
                     // Thread creat correctament, l'afegim a la llista de mcgruders
                     pthread_mutex_lock(&mutexLlistaMcGruders); // Esperem semafor i bloquejem
@@ -199,7 +199,6 @@ void creaNouMcGruder(int fdNewMcgruder){
             sendTrama(connectionTrama, fdNewMcgruder);
             free(connectionTrama.header);
             free(connectionTrama.data);
-            printf("ERRRR 4\n");
             mostraErrorNewMcgruder();
         }
     }
@@ -303,7 +302,6 @@ void * mcGruderFunc(void* arg){
             mcGruderDisconnectedElimination(fd);
             break;
         }else{
-            //mostraTrama(received);
 
             int mcGruderDown = tractaTrama(received, fd);
             switch (mcGruderDown){
@@ -323,23 +321,23 @@ void * mcGruderFunc(void* arg){
 
                 case 3:
                     // Hem rebut una trama desconeguda
-                    printf("Trama desconeguda\n");
+                    write(1, "Trama desconeguda\n", strlen("Trama desconeguda\n") * sizeof(char));
                     break;
                 case 4:
                     // Extensio desconeguda (mai perque mcgruder ja controla les extensions dels arxius)
-                    printf("Extensio de l'arxiu desconeguda\n");
+                    write(1, "Extensio de l'arxiu desconeguda\n", strlen("Extensio de l'arxiu desconeguda\n") * sizeof(char));
                     break;
                 case 5:
                     // Hem rebut l'arxiu perfectament (ja no cal fer res mes)
                     break;
                 case 6:
-                    printf("Error al crear l'arxiu!\n");
+                    write(1, "Error al crear l'arxiu!\n", strlen("Error al crear l'arxiu!\n") * sizeof(char));
                     break;
                 case 7:
-                    printf("Error, no hem trobat de qui rebem l'arxiu!\n");
+                    write(1, "Error, no hem trobat de qui rebem l'arxiu!\n", strlen("Error, no hem trobat de qui rebem l'arxiu!\n") * sizeof(char));
                     break;
                 default:
-                    printf("Everything running OK!\n");
+                    write(1, "Everything running OK!\n", strlen("Everything running OK!\n") * sizeof(char));
                     break;
             }
         }
@@ -354,6 +352,7 @@ void mcGruderDisconnectedElimination(int fd){
     pthread_mutex_lock(&mutexLlistaMcGruders);
 
     int index = indexOfMcGruder(fd);
+    mcGrudersList.mcgruders[index].telescopeName[strlen(mcGrudersList.mcgruders[index].telescopeName) - 1] = '\0';
     mostraMissatgeDisconnectingMcGruder(mcGrudersList.mcgruders[index].telescopeName);
     deleteMcGruder(fd, index);
 

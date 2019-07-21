@@ -4,16 +4,7 @@
 
 #include "mcgruder_trama.h"
 
-void mostraTrama(Trama connectionTrama){
-    printf("TRAMA\n");
-    printf("\tType: %#08x\n", connectionTrama.type);
-    printf("\tHeader: %s\n", connectionTrama.header);
-    printf("\tLength: %hu\n", connectionTrama.length);
-    printf("\tData: %s\n", connectionTrama.data);
-}
-
 int sendTrama(Trama trama){
-    //mostraTrama(trama);
     int desconnexio = write(fdLionel, &trama.type, 1);
     if (desconnexio < 0){
         return 1;
@@ -57,52 +48,6 @@ int enviaTramaDesconnexio(){
     }
     return 0;
 }
-
-/*Trama receiveTrama(){
-    Trama receivedTrama;
-
-    memset(&receivedTrama, 0, sizeof(receivedTrama));
-
-    int disconnected = read(fdLionel, &receivedTrama.type, sizeof(char));
-    if (disconnected <= 0){
-        receivedTrama.length = -1;
-        return receivedTrama;
-    }
-    receivedTrama.header = (char*)malloc(sizeof(char));
-    int i = 0;
-    char c = '_';
-    while (c != ']'){
-        disconnected = read(fdLionel, &c, sizeof(char));
-        if (disconnected <= 0){
-            receivedTrama.length = -1;
-            return receivedTrama;
-        }
-        receivedTrama.header[i] = c;
-        if (c != ']'){
-            i++;
-            receivedTrama.header = realloc(receivedTrama.header, sizeof(char) * (i+1));
-        }
-    }
-
-    disconnected = read(fdLionel, &receivedTrama.length, 2);
-    if (disconnected <= 0){
-        receivedTrama.length = -1;
-        return receivedTrama;
-    }
-    int nameLength = ((int)receivedTrama.length);
-    receivedTrama.data = (char*)malloc(sizeof(char) * nameLength);
-    for (i = 0; i < nameLength; i++) {
-        disconnected = read(fdLionel, &c, sizeof(char));
-        if (disconnected <= 0){
-            receivedTrama.length = -1;
-            return receivedTrama;
-        }
-        receivedTrama.data[i] = c;
-    }
-
-    mostraTrama(receivedTrama);
-    return receivedTrama;
-}*/
 
 Trama receiveTrama(){
     Trama receivedTrama;
@@ -151,7 +96,6 @@ Trama receiveTrama(){
             }
             receivedTrama.data[nameLength] = '\0';
 
-            //mostraTrama(receivedTrama);
             return receivedTrama;
         }
 

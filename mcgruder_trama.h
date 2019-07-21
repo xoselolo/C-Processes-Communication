@@ -7,10 +7,6 @@
 
 #include "mcgruder_screen.h"
 
-/**
- * Metode que mostra el contingut d'una trama
- */
-void mostraTrama(Trama connectionTrama);
 
 /**
  * Metode per a enviar de forma generica una trama

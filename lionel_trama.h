@@ -8,8 +8,6 @@
 #include "lionel_screen.h"
 #include "checksum.h"
 
-void mostraTrama(Trama connectionTrama);
-
 /**
  * Funcio que envia una trama al macgruder amb @param fd especificat
  * @return 0 OK / 1 McGruder ha caigut

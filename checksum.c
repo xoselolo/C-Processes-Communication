@@ -9,11 +9,9 @@
 
 char* makeChecksum(char* filename){
     int status;
-    printf("Anem a calcular el checksum\n");
 
     int fd_pipeFillToPare[2];
     if (pipe(fd_pipeFillToPare) < 0){
-        printf("Error al crear la pipe!\n");
         return NULL;
     }
 
@@ -22,12 +20,10 @@ char* makeChecksum(char* filename){
     switch (sonPID){
         case -1:
             // Error
-            printf("Error al crear el fork!\n");
             return NULL;
             exit(-1);
             break;
         case 0:
-            printf("Soc el fill!\n");
             // Tanquem fd de les pipes que no utilitzarem
             close(fd_pipeFillToPare[PIPE_READ]);
 

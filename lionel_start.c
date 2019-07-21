@@ -100,7 +100,5 @@ int createMessageQueue(char* pathConfig){
     if (queueId < 0){
         return 1;
     }
-    printf("Cua creada!\n");
-    printf("Id de la cua (LIONEL) = %d \n", queueId);
     return 0;
 }

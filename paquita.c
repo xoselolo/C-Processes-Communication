@@ -24,12 +24,10 @@ void paquita(){
 }
 
 void paquitaDesconnecta(){
-    printf("Desconnectant readers...\n");
     for (int i = 0; i < readersList.numReaders; i++) {
         pthread_cancel(readersList.readers[i].thread);
     }
     free(readersList.readers);
-    printf("Readers desconectats!\n");
 }
 
 void* readerFuncJPG(void* arg){
@@ -88,9 +86,9 @@ void tractaImatge(MessageJPG messageJPG){
     paquitaJPGinfo.numTotalImatges++;
     paquitaJPGinfo.totalKB += ((float) messageJPG.size) / 1024;
 
-    printf("Nova info de JPG: \n");
+    /*printf("Nova info de JPG: \n");
     printf("\t Num total imatges: %d \n", paquitaJPGinfo.numTotalImatges);
-    printf("\t Num total KB: %.2f \n", paquitaJPGinfo.totalKB);
+    printf("\t Num total KB: %.2f \n", paquitaJPGinfo.totalKB);*/
 }
 
 // Funcio dels texts
@@ -114,18 +112,18 @@ void tractaText(MessageTXT messageTXT){
         while (final != 1){
             Constelacio constelacio;
             final = llegirConstelacio(fdArxiuConstelacions, &constelacio);
-            printf("Nova constelacio:\n");
+            /*printf("Nova constelacio:\n");
             printf("\t Codi: %s \n", constelacio.codi);
             printf("\t Densitat: %f \n", constelacio.densitat);
-            printf("\t Magnitud: %f \n", constelacio.magnitud);
+            printf("\t Magnitud: %f \n", constelacio.magnitud);*/
             actualitzaLast(constelacio);
         }
         // hem acabat de llegir
         actualitzaMitjanaConstelacions();
         close(fdArxiuConstelacions);
-        printf("Stats: \n");
+        /*printf("Stats: \n");
         printf("\tMitjana de constelacions per fitxer: %f \n", paquitaTXTinfo.mitjanaConstelacionsPerArxiu);
-        printf("\tNum total de fitxers: %d \n", paquitaTXTinfo.numTotalTxt);
+        printf("\tNum total de fitxers: %d \n", paquitaTXTinfo.numTotalTxt);*/
     }
 }
 

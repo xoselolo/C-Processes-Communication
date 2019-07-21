@@ -20,7 +20,6 @@ void run(){
             // ha caigut lionel sobtadament
             desconnectaForsaBruta();
         }else{
-            //mostraTrama(lionelDownTrama);
             desconnectaForsaBruta(); // de moment
             // todo: tractar trama (ha de ser la de desconnexio, perque lionel no envia res a no ser que nosaltres ho
             // todo: estiguem esperant a dins de la funcio parseDirectory (a dins de desperta), a un altre scope
